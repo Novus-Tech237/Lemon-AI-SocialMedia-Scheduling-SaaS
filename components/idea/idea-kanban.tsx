@@ -77,21 +77,21 @@ const IdeaKanban = () => {
     })
 
     const deleteIdeaMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(`/api/idea/${id}`, {
-        method: "DELETE",
-      })
-      if (!res.ok) throw new Error("Failed to delete idea")
-      return res.json()
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ideas"] })
-    },
-    onError: (error) => {
-      console.error("Failed to delete idea", error);
-      toast.error("Failed to delete idea")
-    }
-  })
+        mutationFn: async (id: string) => {
+            const res = await fetch(`/api/idea/${id}`, {
+                method: "DELETE",
+            })
+            if (!res.ok) throw new Error("Failed to delete idea")
+            return res.json()
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["ideas"] })
+        },
+        onError: (error) => {
+            console.error("Failed to delete idea", error);
+            toast.error("Failed to delete idea")
+        }
+    })
 
 
     const handleDragEnd = (result: DropResult) => {
@@ -185,6 +185,7 @@ const IdeaKanban = () => {
             )
             setColumns(newColumn)
         }
+        console.log(idea,"idea")
         saveIdeaMutation.mutate(idea, {
             onSuccess: () => {
                 setSelectedIdea(null);
@@ -194,257 +195,259 @@ const IdeaKanban = () => {
     }
 
     const handleDeleteIdea = (columnId: string, ideaId: string) => {
-     if (!ideaId) return; 
-    const newColumns = columns.map((col) =>
-      col.id === columnId
-        ? {
-          ...col,
-          ideas: col.ideas.filter((idea) => idea.id !== ideaId)
+        if (!ideaId) return;
+        const newColumns = columns.map((col) =>
+            col.id === columnId
+                ? {
+                    ...col,
+                    ideas: col.ideas.filter((idea) => idea.id !== ideaId)
+                }
+                : col
+        )
+        setColumns(newColumns)
+
+        if (!ideaId.startsWith('temp-')) {
+            deleteIdeaMutation.mutate(ideaId)
         }
-        : col
-    )
-    setColumns(newColumns)
-
-    if(!ideaId.startsWith('temp-')) {
-        deleteIdeaMutation.mutate(ideaId)
     }
-}
 
-const handleGeneratedIdea = (title:string, description:string) => {
-    const targetColumnId = columns[0]?.id;
-    if (!targetColumnId) return;
-    
-    const newIdea: IdeaType = {
-        id: `temp-${Date.now()}`,
-        title,
-        description,
-        columnId: targetColumnId,
-    };
-    
-    const newColumns = columns.map((col) =>
-        col.id === targetColumnId
-            ? {
-                ...col,
-                ideas: [newIdea, ...col.ideas]
-            }
-            : col
-    )
-    setColumns(newColumns);
-    saveIdeaMutation.mutate({
-        title:title,
-        description:description,
-        columnId:targetColumnId,
-        sortOrder: 0
-    });
-}
+    const handleGeneratedIdea = (title: string, description: string) => {
+        const targetColumnId = columns[0]?.id;
+        if (!targetColumnId) return;
+
+        const newIdea: IdeaType = {
+            id: `temp-${Date.now()}`,
+            title,
+            description,
+            columnId: targetColumnId,
+        };
+
+        const newColumns = columns.map((col) =>
+            col.id === targetColumnId
+                ? {
+                    ...col,
+                    ideas: [newIdea, ...col.ideas]
+                }
+                : col
+        )
+        setColumns(newColumns);
+        saveIdeaMutation.mutate({
+            title: title,
+            description: description,
+            columnId: targetColumnId,
+            sortOrder: 0
+        });
+    }
 
     return (
         <>
-        <div className="flex flex-col overflow-hidden">
-            <header className="flex items-center justify-between border-b px-6 py-4">
-                <div>
-                    <h1 className="text-2xl font-semibold">Ideas</h1>
-                    <p className="text-sm text-muted-foreground">
-                        Capture and organize your content ideas
-                    </p>
-                </div>
-                <div className="flex items-center gap-3">
-                    {/* //GenerateIdea popover */}
-                    <GenerateIdeasPopover onGenerated={handleGeneratedIdea} />
-                    <Button variant="outline" className="gap-2"
-                        onClick={() => handleAddIdea(columns[0]?.id ?? "")}
-                    >
-                        <Plus className="h-4 w-4" />
-                        New Idea
-                    </Button>
-                </div>
-            </header>
+            <div className="flex flex-col overflow-hidden">
+                <header className="flex items-center justify-between border-b px-6 py-4">
+                    <div>
+                        <h1 className="text-2xl font-semibold">Ideas</h1>
+                        <p className="text-sm text-muted-foreground">
+                            Capture and organize your content ideas
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        {/* //GenerateIdea popover */}
+                        <GenerateIdeasPopover onGenerated={handleGeneratedIdea} />
+                        <Button variant="outline" className="gap-2"
+                            onClick={() => handleAddIdea(columns[0]?.id ?? "")}
+                        >
+                            <Plus className="h-4 w-4" />
+                            New Idea
+                        </Button>
+                    </div>
+                </header>
 
 
-            <div className="h-[calc(100vh-120px)]">
-                <div className="kanban--board relative py-6 flex-1 h-full overflow-hidden">
-                    {isPending ? (
-                        <div className="flex gap-4 w-full h-full items-start">
-                            {[1, 2, 3, 4].map((i) => (
-                                <div key={i} className="shrink-0 w-[280px] flex flex-col h-full min-h-0 
+                <div className="h-[calc(100vh-120px)]">
+                    <div className="kanban--board relative py-6 flex-1 h-full overflow-hidden">
+                        {isPending ? (
+                            <div className="flex gap-4 w-full h-full items-start">
+                                {[1, 2, 3, 4].map((i) => (
+                                    <div key={i} className="shrink-0 w-[280px] flex flex-col h-full min-h-0 
                 rounded-lg bg-[#f7f6f3] dark:bg-neutral-800/40 border p-3">
-                                    <div className="flex items-center justify-between pb-3">
-                                        <Skeleton className="h-5 w-24" />
-                                        <Skeleton className="h-5 w-6 rounded-full" />
+                                        <div className="flex items-center justify-between pb-3">
+                                            <Skeleton className="h-5 w-24" />
+                                            <Skeleton className="h-5 w-6 rounded-full" />
+                                        </div>
+                                        <div className="flex-1 space-y-3">
+                                            <Skeleton className="h-[100px] w-full rounded-sm" />
+                                            <Skeleton className="h-[120px] w-full rounded-sm" />
+                                            <Skeleton className="h-[80px] w-full rounded-sm" />
+                                        </div>
                                     </div>
-                                    <div className="flex-1 space-y-3">
-                                        <Skeleton className="h-[100px] w-full rounded-sm" />
-                                        <Skeleton className="h-[120px] w-full rounded-sm" />
-                                        <Skeleton className="h-[80px] w-full rounded-sm" />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="h-full overflow-x-auto">
-                            <DragDropContext onDragEnd={handleDragEnd}>
-                                <div
-                                    style={{ height: "100%" }}
-                                    className="flex gap-4 w-full"
-                                >
-                                    {columns?.map((column) => (
-                                        <div
-                                            key={column.id}
-                                            className="shrink-0 w-[280px] flex flex-col h-full min-h-0 
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="h-full overflow-x-auto">
+                                <DragDropContext onDragEnd={handleDragEnd}>
+                                    <div
+                                        style={{ height: "100%" }}
+                                        className="flex gap-4 w-full"
+                                    >
+                                        {columns?.map((column) => (
+                                            <div
+                                                key={column.id}
+                                                className="shrink-0 w-[280px] flex flex-col h-full min-h-0 
 rounded-lg bg-[#f7f6f3] dark:bg-neutral-800/40 border p-3"
-                                        >
-                                            <div className="flex items-center justify-between px-3 pt-3 pb-2">
-                                                <div className="flex items-center gap-2">
-                                                    <h3 className="font-bold text-sm">
-                                                        {column.title}
-                                                    </h3>
-                                                    <Badge variant="secondary">
-                                                        {column.ideas.length}
-                                                    </Badge>
+                                            >
+                                                <div className="flex items-center justify-between px-3 pt-3 pb-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className="font-bold text-sm">
+                                                            {column.title}
+                                                        </h3>
+                                                        <Badge variant="secondary">
+                                                            {column.ideas.length}
+                                                        </Badge>
+                                                    </div>
+                                                    <Button size="icon"
+                                                        variant="ghost"
+                                                        className="size-7"
+                                                        onClick={() => handleAddIdea(column.id)}
+                                                    >
+                                                        <Plus className="w-4 h-4" />
+                                                    </Button>
                                                 </div>
-                                                <Button size="icon"
-                                                    variant="ghost"
-                                                    className="size-7"
-                                                    onClick={() => handleAddIdea(column.id)}
+
+
+                                                <Droppable droppableId={column.id}>
+                                                    {(provided, snapshot) => (
+                                                        <div
+                                                            ref={provided.innerRef}
+                                                            {...provided.droppableProps}
+                                                            className={cn(
+                                                                `flex-1 overflow-y-auto overflow-x-hidden
+p-2 px-3 transition-colors min-h-0`,
+                                                                snapshot.isDraggingOver
+                                                                    ? "bg-primary/20 border-2 border-dashed border-primary"
+                                                                    : "bg-transparent",
+
+                                                            )}
+
+                                                        >
+
+                                    <div className="space-y-2">
+                                    {column?.ideas.map((idea, index) => (
+                                        <Draggable
+                                            key={idea.id || `idea-${index}`}
+                                            draggableId={idea.id || `idea-${index}`}
+                                            index={index}>
+
+                                            {(provided, snapshot) => (
+                                                <Card
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    {...provided.dragHandleProps}
+                                                    className={cn(
+                                                        "group cursor-pointer! shadow-sm rounded-sm! active:cursor-grabbing transform transition-all",
+                                                        snapshot.isDragging &&
+                                                        "scale-95 rotate-1 shadow-lg",
+                                                    )}
+                                                    onClick={() => handleEditIdea(idea, column.id)}
                                                 >
-                                                    <Plus className="w-4 h-4" />
-                                                </Button>
+                                                    <CardContent>
+                                                        {idea.images && idea.images?.length > 0 && (
+                                                            <div className="grid grid-cols-4 gap-1 mb-2">
+                                                                {idea.images.slice(0, 4).map((image, index) => (
+                                                                    <img
+                                                                        key={index}
+                                                                        src={image.url}
+                                                                        alt={idea.title}
+                                                                        className="w-full h-12 rounded object-cover 
+                                    border"
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        <CardHeader className="mb-1 p-0">
+                                                            <div className="flex items-start justify-between">
+                                                                <div>
+                                                                    <h4 className="font-semibold text-sm">{idea.title}</h4>
+                                                                </div>
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger>
+                                                                        <Button
+                                                                            size="icon"
+                                                                            variant="ghost"
+                                                                            className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                                                                        >
+                                                                            <MoreHorizontal className="h-3.5 w-3.5" />
+                                                                        </Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent>
+                                                                        <DropdownMenuItem onClick={() => handleEditIdea(idea, column.id)}>
+                                                                            Edit
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem
+                                                                            className="text-destructive"
+                                                                            disabled={deleteIdeaMutation.isPending}
+                                                                            onSelect={() => {
+                                                                                handleDeleteIdea(
+                                                                                    column.id,
+                                                                                    idea.id || ""
+                                                                                )
+                                                                            }}
+                                                                        >
+                                                                            Delete
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            </div>
+                                                        </CardHeader>
+
+                                                        {idea.description && (
+                                                            <p className="text-xs text-muted-foreground line-clamp-2">
+                                                                {idea.description}
+                                                            </p>
+                                                        )}
+                                                    </CardContent>
+                                                </Card>
+                                            )}
+                                        </Draggable>
+                                    ))}
+                                    </div>
+
+                                    <Button
+                                    variant="ghost"
+                                    onClick={() => handleAddIdea(column.id)}
+                                    className="w-full border-none! h-12! mt-2.5"
+                                    >
+                                    <Plus className="h-4 w-4" />
+                                    New Idea
+                                    </Button>
+
+                                    {provided.placeholder}
+                                    </div>
+                                                    )}
+                                                </Droppable>
                                             </div>
 
-
-                                            <Droppable droppableId={column.id}>
-                                                {(provided, snapshot) => (
-                                                    <div
-                                                        ref={provided.innerRef}
-                                                        {...provided.droppableProps}
-                                                        className={cn(
-                                                            `flex-1 overflow-y-auto overflow-x-hidden
-p-2 px-3 transition-colors min-h-0`,
-                                                            snapshot.isDraggingOver
-                                                                ? "bg-primary/20 border-2 border-dashed border-primary"
-                                                                : "bg-transparent",
-
-                                                        )}
-
-                                                    >
-
-                                                        <div className="space-y-2">
-                                                            {column?.ideas.map((idea, index) => (
-                                                                <Draggable
-                                                                    key={idea.id || `idea-${index}`}
-                                                                    draggableId={idea.id || `idea-${index}`}
-                                                                    index={index}>
-
-                                                                    {(provided, snapshot) => (
-                                                                        <Card
-                                                                            ref={provided.innerRef}
-                                                                            {...provided.draggableProps}
-                                                                            {...provided.dragHandleProps}
-                                                                            className={cn(
-                                                                                "group cursor-pointer! shadow-sm rounded-sm! active:cursor-grabbing transform transition-all",
-                                                                                snapshot.isDragging &&
-                                                                                "scale-95 rotate-1 shadow-lg",
-                                                                            )}
-                                                                            onClick={() => handleEditIdea(idea, column.id)}
-                                                                        >
-<CardContent>
-    {idea.images && idea.images?.length > 0 && (
-        <div className="grid grid-cols-4 gap-1 mb-2">
-            {idea.images.slice(0, 4).map((image, index) => (
-                <img
-                    key={index}
-                    src={image.url}
-                    alt={idea.title}
-                    className="w-full h-12 rounded object-cover 
-border"
-                />
-            ))}
-        </div>
-    )}
-    <CardHeader className="mb-1 p-0">
-        <div className="flex items-start justify-between">
-            <div>
-                <h4 className="font-semibold text-sm">{idea.title}</h4>
-            </div>
-            <DropdownMenu>
-                <DropdownMenuTrigger>
-                    <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                    >
-                        <MoreHorizontal className="h-3.5 w-3.5" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => handleEditIdea(idea, column.id)}>
-                        Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                        className="text-destructive"
-                        disabled={deleteIdeaMutation.isPending}
-                        onSelect={() => {
-                            handleDeleteIdea(
-                                column.id,
-                                idea.id || ""
-                            )
-                        }}
-                    >
-                        Delete
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
-    </CardHeader>
-
-    {idea.description && (
-        <p className="text-xs text-muted-foreground line-clamp-2">
-            {idea.description}
-        </p>
-    )}
-</CardContent>
-                                                                        </Card>
-                                                                    )}
-                                                                </Draggable>
-                                                            ))}
-                                                        </div>
-
-                                                        <Button
-                                                            variant="ghost"
-                                                            onClick={() => handleAddIdea(column.id)}
-                                                            className="w-full border-none! h-12! mt-2.5"
-                                                        >
-                                                            <Plus className="h-4 w-4" />
-                                                            New Idea
-                                                        </Button>
-                                                    </div>
-                                                )}
-                                            </Droppable>
-                                        </div>
-
-                                    ))}
-                                </div>
-                            </DragDropContext>
-                        </div>
-                    )}
+                                        ))}
+                                    </div>
+                                </DragDropContext>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <IdeaDialog 
-          open={showIdeaDialog}
-          onOpenChange={(open) => {
-            setShowIdeaDialog(open)
-          }}
-          idea={selectedIdea ?? undefined}
-          isSaving={saveIdeaMutation.isPending}
-          selectedColumnId={selectedColumnId || columns[0]?.id || ""}
-          columns={columns?.map((col) => ({
-            id:col.id,
-            title:col.title
-          }))}
-          onSave={handleSaveIdea}
-        />
+            <IdeaDialog
+                open={showIdeaDialog}
+                onOpenChange={(open) => {
+                    setShowIdeaDialog(open)
+                }}
+                idea={selectedIdea ?? undefined}
+                isSaving={saveIdeaMutation.isPending}
+                selectedColumnId={selectedColumnId || columns[0]?.id || ""}
+                columns={columns?.map((col) => ({
+                    id: col.id,
+                    title: col.title
+                }))}
+                onSave={handleSaveIdea}
+            />
         </>
     )
 }

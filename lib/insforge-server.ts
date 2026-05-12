@@ -16,14 +16,23 @@ let cachedUserId: string | null = null;
 let refreshInterval: NodeJS.Timeout | null = null;
 
 // Helper function to refresh token
-async function refreshAuthToken(client: InsForgeClient): Promise<void> {
+async function refreshAuthToken(client: InsForgeClient, retries = 3): Promise<void> {
   try {
     const session = await auth();
     const token = await session?.getToken({ template: SERVER_TOKEN_TEMPLATE });
-    client.getHttpClient().setAuthToken(token ?? null);
+    if (token) {
+      client.getHttpClient().setAuthToken(token);
+    } else {
+      throw new Error('No token received from Clerk');
+    }
   } catch (err) {
-    console.error('Failed to refresh Clerk token for InsForge client', err);
+    // if (retries > 0) {
+    //   console.log(`Retrying token refresh... (${retries} retries left)`);
+    //   setTimeout(() => refreshAuthToken(client, retries - 1), 1000);
+    // }else {
+      console.error('Failed to refresh Clerk token for InsForge client', err);
     client.getHttpClient().setAuthToken(null);
+    
   }
 }
 

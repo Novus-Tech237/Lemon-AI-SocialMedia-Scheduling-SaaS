@@ -35,7 +35,7 @@ export async function GET() {
                 id: idea.id,
                 title: idea.title,
                 description: idea.description,
-                imageUrls: idea.images ?? [],
+                images: idea.images ?? [],
                 columnId: idea.group_id,
                 sortOrder: idea.sort_order
             }))
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
             title,
             groupId,
             description,
-            imageUrls,
+            images,
             sortOrder
         } = await request.json();
 
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
             group_id: groupId,
             title: title,
             description,
-            images: imageUrls,
+            images: images,
             sort_order: typeof sortOrder === 'number' ? sortOrder : 0
         };
 

@@ -31,13 +31,13 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      style={
-        {
-          "--font-sans": geistSans.style.fontFamily,
-          "--font-mono": geistMono.style.fontFamily,
-        } as React.CSSProperties
-      }
+      className={`${geistSans.className} h-full antialiased`}
+      // style={
+      //   {
+      //     "--font-sans": geistSans.style.fontFamily,
+      //     "--font-mono": geistMono.style.fontFamily,
+      //   } as React.CSSProperties
+      // }
     >
       <body className="min-h-full flex flex-col">
         <ClerkProvider>
