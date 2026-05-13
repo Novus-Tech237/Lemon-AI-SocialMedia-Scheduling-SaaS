@@ -90,9 +90,9 @@ export function ScheduleDatePicker({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button size="lg" className={cn("px-4", className)} variant="outline">
-            <span className="flex-1 flex items-center gap-2">
+            <span className="flex-1 flex items-center gap-2 text-sm">
               <CalendarDays className="size-4" />
-              <span className="flex items-center gap-1.5 font-semibold text-sm">
+              <span className="flex items-center gap-1.5 font-semibold">
                 {date ? format(date, "MMMM d") : "Set Date & Time"}
                 {date && time && <span className="text-muted-foreground">, {time}</span>}
               </span>

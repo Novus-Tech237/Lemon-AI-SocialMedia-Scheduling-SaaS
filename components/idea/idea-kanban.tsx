@@ -244,7 +244,7 @@ const IdeaKanban = () => {
             <div className="flex flex-col overflow-hidden">
                 <header className="flex items-center justify-between border-b px-6 py-4">
                     <div>
-                        <h1 className="text-2xl font-semibold">Ideas</h1>
+                        <h1 className="text-xl font-semibold">Ideas</h1>
                         <p className="text-sm text-muted-foreground">
                             Capture and organize your content ideas
                         </p>

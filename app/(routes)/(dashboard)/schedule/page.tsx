@@ -15,6 +15,9 @@ const SchedulePageContent = () => {
   const [activeView, setActiveView] = useQueryState("view", {
     defaultValue: "calendar",
   });
+  const [_,setStatus] = useQueryState("status", {
+    defaultValue: "",
+  })
   const [createPostModalOpen, setCreatePostModalOpen] = useState(false)
   return (
     <div className="flex flex-col h-full">
@@ -27,7 +30,12 @@ const SchedulePageContent = () => {
           <ToggleGroup
             type="single"
             value={activeView}
-            onValueChange={(value) => setActiveView(value as ViewType)}
+            onValueChange={(value) => {
+              //reset the url status
+              setStatus(null)
+              setActiveView(value as ViewType)
+
+            }}
             className="border rounded-lg p-px"
           >
             <ToggleGroupItem value="list"
@@ -50,7 +58,7 @@ const SchedulePageContent = () => {
 
       <div className="flex-1 overflow-hidden">
         {activeView === "list" ? (
-          <ListView />
+          <ListView setCreatePostModalOpen={setCreatePostModalOpen} />
         ) : (
           <CalendarView />
         )}

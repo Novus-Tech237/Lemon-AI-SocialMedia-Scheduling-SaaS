@@ -105,13 +105,8 @@ const ContentTextarea = ({
   }
 
   return (
-    <div
-      className={cn(
-        "flex flex-col border-none relative",
-        className,
-        
-      )}
-    >
+       <div className={cn("flex flex-col h-full", className)}>
+    
       {/* Editable area */}
       <Textarea
         ref={textareaRef}
@@ -121,23 +116,22 @@ const ContentTextarea = ({
         disabled={disabled}
         //minHeight={minHeight}
         className={cn(
-          "bg-transparent ring-0! border-none! resize-none! pt-0! pl-0! pr-0!",
-          "placeholder:text-muted-foreground/80",
+           "flex-[0.2] bg-transparent ring-0! border-none! resize-none! pt-0! pl-0! pr-0!",
+          "placeholder:text-muted-foreground/80 overflow-y-auto",
           disabled && "opacity-50 cursor-not-allowed",
-          contentClass && contentClass,
-      
+          contentClass
           // `w-full bg-transparent 
           // text-base
           // placeholder:text-muted-foreground/80 focus:outline-none`,
           // //contentClass && contentClass,
           // disabled && "opacity-50 cursor-not-allowed"
         )}
-        style={{ minHeight: minHeight, maxHeight: "400px" }}
+     style={{ minHeight: `${minHeight}px`, maxHeight: `${minHeight}px` }}
       />
 
-      <div className="shrink-0">
+      <div className="shrink-0 space-y-0 -mt-4">
         {/* Image Upload Section */}
-        <div className="flex items-center gap-3 mt-2 mb-5">
+        <div className="flex items-center gap-3">
           {/* Add Image Button */}
           <div
             onClick={() => !isUploading && !disabled && fileInputRef.current?.click()}
@@ -195,11 +189,11 @@ const ContentTextarea = ({
         </div>
 
         {/* Toolbar */}
-        <div className="shrink-0 absolute w-full -bottom-1 flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
               <PopoverTrigger asChild>
-                <Button size="icon" variant="ghost" disabled={disabled}>
+                <Button size="icon" className="cursor-pointer" variant="ghost" disabled={disabled}>
                   <SmileIcon className="h-5 w-5" />
                 </Button>
               </PopoverTrigger>

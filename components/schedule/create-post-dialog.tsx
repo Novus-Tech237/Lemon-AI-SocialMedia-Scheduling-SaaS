@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useMemo, useState } from "react";
-import { parse, set } from "date-fns"
+import { format, parse, set } from "date-fns"
 import { getChannelIcon } from "@/constants/channels";
 import { ChannelType } from "@/types/channel.type";
 import { ImageObject } from "@/types/post.type";
@@ -20,7 +20,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import IdeasList from "./ideas-list";
 import PreviewPanel from "./preview";
 import { ButtonGroup } from "../ui/button-group";
-import { POST_STATUS, POST_STATUSES, PostStatus } from "@/constants/post";
+import { POST_STATUS, PostStatus } from "@/constants/post";
 import { ScheduleDatePicker } from "./schedule-date-picker";
 import Link from "next/link";
 import { Spinner } from "../ui/spinner";
@@ -28,6 +28,7 @@ import { Spinner } from "../ui/spinner";
 type PropsType = {
     open: boolean
     onOpenChange: (open: boolean) => void
+    selectedDate?: Date | null
 }
 
 type ChannelContent = {
@@ -43,7 +44,8 @@ const rightTabs = [
     { id: "preview" as ActionTabType, label: "Preview", icon: ScanEye },
 ]
 
-const CreatePostDialog = ({ open, onOpenChange }: PropsType) => {
+
+const CreatePostDialog = ({ open, onOpenChange, selectedDate }: PropsType) => {
 
     const queryClient = useQueryClient();
     const [globalContent, setGlobalContent] = useState<ChannelContent>({ text: "", images: [] })
@@ -77,6 +79,13 @@ const CreatePostDialog = ({ open, onOpenChange }: PropsType) => {
         })) as ChannelType[]
     }, [isPending, channelsData])
 
+     useEffect(() => {
+       if(selectedDate){
+        setDate(selectedDate)
+       }
+    }, [selectedDate])
+
+   
     useEffect(() => {
         if (channels.length > 0 && Object.keys(channelContent).length === 0) {
             const initialContent: Record<string, ChannelContent> = {}
@@ -387,6 +396,7 @@ const CreatePostDialog = ({ open, onOpenChange }: PropsType) => {
                                             placeholder="Write your main content here..
         . It will be copied to channels when you select them"
                                             minHeight={270}
+                                            showAIAssistant={true}
                                             disabled={!hasConnectedChannel}
                                             contentClass="text-sm placeholder:opacity-50 pt-0!"
                                             onChange={(text) => handleGlobalContentChange(text)}
@@ -441,7 +451,7 @@ truncate flex-1 text-left max-w-[400px]">
                                                         </AccordionTrigger>
                                                     )}
 
-                                                    <AccordionContent>
+                                                    <AccordionContent className="overflow-visible">
                                                         <div className="flex pt-3 px-3 gap-3">
                                                             {isExpanded && (
                                                                 <span>
