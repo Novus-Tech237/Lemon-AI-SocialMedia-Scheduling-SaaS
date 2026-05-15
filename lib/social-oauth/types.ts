@@ -1,7 +1,7 @@
 import { ChannelTypeEnum } from "@/constants/channels"
 
 export type OAuthConnectionProfile = {
-    provderAccountId?: string | null
+    providerAccountId?: string | null
     handle?: string;
     profileImage?: string | null
 }

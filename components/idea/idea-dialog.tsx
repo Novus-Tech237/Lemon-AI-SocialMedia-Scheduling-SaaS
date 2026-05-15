@@ -9,6 +9,7 @@ import { Input } from "../ui/input"
 import { Button } from "../ui/button"
 import { Spinner } from "../ui/spinner"
 import ContentTextarea from "../content-textarea"
+import { AIAssistant } from "../schedule/ai-assitant"
 
 
 type IdeaDialogProps = {
@@ -135,12 +136,12 @@ const IdeaDialog = ({
                         bg-muted/30
                         ">
                             <div className="p-4">
-                                {/* <AIAssistant  
+                                <AIAssistant  
                                   content={`${title}\n\n${description}`}
-                                  onGenerate={(content) => {
+                                  onGenerate={(content:string) => {
                                     setDescription(content)
                                   }}
-                                /> */}
+                                />
                             </div>
                         </div>
                     )}

@@ -40,7 +40,7 @@ const IdeaKanban = () => {
             const res = await fetch("/api/idea")
             if (!res.ok) throw new Error("Failed to fetch ideas")
             return res.json()
-        }
+        },
     })
 
     useEffect(() => {

@@ -15,10 +15,15 @@ export type PostType = {
     published_url?: string | null
     user_channel_id?: string | null
     user_channels?: {
+        id: string;
         handle?: string | null
         profile_image?: string | null
         profile_url?: string | null
         channel_type_id?: string
+        provider_account_id?: string | null
+        access_token?: string | null
+        refresh_token?: string | null
+        token_expires_at?: string | null
         channel_types?: ChannelType
     },
     created_at: string;

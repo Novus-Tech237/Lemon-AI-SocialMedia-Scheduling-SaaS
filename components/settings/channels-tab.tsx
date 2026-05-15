@@ -78,7 +78,8 @@ function ChannelTabContent() {
             queryClient.invalidateQueries({ queryKey: ["channels"] })
         },
         onError: (error: Error) => {
-            toast.error(error.message || "Failed to disconnect channel")
+            console.error("Disconnect error:", error)
+            toast.error("Failed to disconnect channel")
         },
     })
 

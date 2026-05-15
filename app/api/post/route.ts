@@ -25,23 +25,22 @@ export async function GET(request: NextRequest) {
         .flatMap((channel) => channel.split(",")).filter(Boolean)
         const groupByDate = searchParams.get("group_by_date") === "true";
 
-        const postQuery = insforge.database
+        let postQuery = insforge.database
             .from("scheduled_posts")
             .select(
-                "*, user_channels(id, handle, profile_image, channel_type_id, channel_types(id, type, name, color, character_limit))"
+                "*, user_channels(*, channel_types(id, type, name, color, character_limit))"
             )
             .eq("user_id", userId)
             .order("scheduled_at", { ascending: false })
 
-        if(status) {
-            postQuery.eq("status", status)
-        }
-        if(channelIds.length > 0) {
-            postQuery.in("user_channel_id", channelIds)
-        }
+        if (status) postQuery = postQuery.eq("status", status)
+        if (channelIds.length > 0) postQuery = postQuery.in("user_channel_id", channelIds)
         
         const {data:posts, error} = await postQuery;
         if(error) throw error;
+
+        //console.log("posts:", JSON.stringify(posts, null, 2))
+
 
         if(!groupByDate) return NextResponse.json({ posts: posts ?? []})
 
@@ -64,6 +63,8 @@ export async function GET(request: NextRequest) {
            groupMap.get(key)!.posts.push(post);
         });
 
+        console.log("groupMap size:", groupMap.size)
+
         const groupPosts = Array.from(groupMap.entries()).map(([key, value]) => ({
             key,
             ...value
@@ -80,11 +81,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        //const {has} = await auth()
-        const {insforge, userId} = await getInsforgeServerClient()
+        const {has, userId} = await auth()
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
+
+        const {insforge} = await getInsforgeServerClient()
         const {
             posts,
             scheduledAt,
@@ -106,6 +108,14 @@ export async function POST(request: NextRequest) {
         }))
         if(normalizedPosts.length === 0) {
             return NextResponse.json({ error: "No valid posts provided" }, { status: 400 })
+        }
+
+        const isPaidPlan = has({ plan:"pro"}) || has({ plan:"premium"})
+        if(!isPaidPlan){
+            const canCreatePost = await checkCreatePostLimit(insforge, userId)
+            if (!canCreatePost) {
+                return NextResponse.json({ error: "You have reached your post limit, upgrade" }, { status: 403 })
+            }
         }
         
         const invalidPost = normalizedPosts.find((post) => !post.content);
@@ -179,6 +189,22 @@ export async function POST(request: NextRequest) {
         console.error("Error creating post:", error)
         return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
+}
+
+async function checkCreatePostLimit(
+  insforge: Awaited<ReturnType<typeof getInsforgeServerClient>>["insforge"],
+  userId: string,
+) {
+  const { count, error } = await insforge.database
+    .from("scheduled_posts")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return (count ?? 0) < 4;
 }
 
 

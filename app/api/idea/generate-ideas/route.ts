@@ -7,9 +7,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
     try {
-        const { userId } = await auth();
+        const { has, userId } = await auth();
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const canUseAI = has({ plan: "pro" }) || has({ plan: "premium" })
+        if (!canUseAI) {
+            return NextResponse.json({ error: "AI Idea generation requires Pro or Premium plan" }, { status: 403 });
         }
 
         const { businessType, targetAudience } = await request.json()

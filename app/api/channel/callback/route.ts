@@ -82,10 +82,13 @@ export async function GET(request: NextRequest) {
             accessToken: token.accessToken
         })
 
+        console.log("callback", JSON.stringify(profile, null, 2))
+
+
         const payload = {
             user_id: state.userId,
             channel_type_id: state.channelTypeId,
-            provider_account_id: profile.provderAccountId ?? null,
+            provider_account_id: profile.providerAccountId ?? null,
             handle: profile.handle ?? null,
             profile_image: profile.profileImage ?? null,
             access_token: encrypt(token.accessToken),

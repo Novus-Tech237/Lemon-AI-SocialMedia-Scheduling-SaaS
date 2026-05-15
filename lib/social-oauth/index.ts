@@ -32,7 +32,7 @@ const headers: Record<string, string> = {
 
   if(type === ChannelTypeEnum.TWITTER && config.clientSecret){
      const auth_header = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString('base64')
-     headers['Authorization'] = `Basic ${auth_header}`
+     headers.Authorization = `Basic ${auth_header}`
   }
 
   const response = await fetch(config.tokenUrl, {
@@ -40,10 +40,11 @@ const headers: Record<string, string> = {
     headers,
     body,
   })
-  if (!response.ok) {
-    throw new Error(`Token exchange failed: ${response.statusText}`)
-  }
   const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data?.error_description || data?.error || `Token exchange failed: ${response.statusText}`)
+  }
 
   return data
 }
@@ -102,13 +103,14 @@ function createProvider(type:ChannelTypeEnum,opts: { pkce?: boolean} = {}): OAut
         refresh_token: refreshToken,
         client_id: config.clientId,
       })
+
       if(config.clientSecret){
         params.append('client_secret', config.clientSecret)
       }
       if(redirectUri){
         params.append('redirect_uri', redirectUri)
       }
-      
+
       const data = await requestToken(type, params)
       
       const seconds = Number(data.expires_in)
@@ -134,11 +136,13 @@ function createProvider(type:ChannelTypeEnum,opts: { pkce?: boolean} = {}): OAut
       const data = await response.json()
 
       const profileData = data?.data ?? data?.user ?? data
-      const providerAccountId = profileData?.id ??profileData?.sub ?? profileData?.user_id ?? null;
+      const providerAccountId = profileData?.id ?? profileData?.sub ?? profileData?.user_id ?? null;
       
       const handle = profileData?.username ?? profileData?.screen_name ?? profileData?.handle  ?? profileData?.name ?? null;
 
       const profileImage = profileData?.thread_profile_picture ?? profileData?.profile_image_url ?? profileData?.avatar_url ?? profileData?.profile_image ?? profileData?.picture?.data?.url ?? profileData?.picture?.url ?? profileData?.picture ?? null
+
+      console.log(providerAccountId, handle, "providerAccountId")
      
       return {
         providerAccountId,
@@ -163,4 +167,18 @@ const PROVIDERS: Record<ChannelTypeEnum, any> = {
 
 export function getOAuthProvider(type:ChannelTypeEnum) {
    return PROVIDERS[type];
+}
+
+export async function refreshOauthToken(
+  type:ChannelTypeEnum,
+  refreshToken:string,
+  redirectUri:string,
+){
+  console.log("refreshing token", type, refreshToken, redirectUri)
+  const provider = getOAuthProvider(type);
+  if(!provider.refreshToken){
+    throw new Error('Refresh token not supported for this provider');
+  }
+  const result = await provider.refreshToken({refreshToken, redirectUri});
+  return result;
 }

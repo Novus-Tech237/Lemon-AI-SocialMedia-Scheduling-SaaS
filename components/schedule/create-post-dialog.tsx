@@ -24,6 +24,7 @@ import { POST_STATUS, PostStatus } from "@/constants/post";
 import { ScheduleDatePicker } from "./schedule-date-picker";
 import Link from "next/link";
 import { Spinner } from "../ui/spinner";
+import { AIAssistant } from "./ai-assitant";
 
 type PropsType = {
     open: boolean
@@ -537,7 +538,7 @@ dark:text-amber-400">
                                 <div className="py-4 flex-1 flex flex-col h-full">
                                     {selectedRightTab === "ai" && (
                                         <div className="px-6">
-                                            {/* <AIAssistant 
+                                            <AIAssistant 
                             content={channelContent[activeAccordion]?.text || 
                                 globalContent?.text || ""
                             }
@@ -557,7 +558,7 @@ dark:text-amber-400">
                                 }
                                 }))
                             }}
-                        /> */}
+                        />
                                         </div>
                                     )}
 

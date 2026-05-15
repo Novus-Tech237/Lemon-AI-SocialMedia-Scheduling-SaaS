@@ -29,6 +29,7 @@ import { getChannelIcon } from "@/constants/channels"
 import ContentTextarea from "../content-textarea"
 import IdeasList from "./ideas-list"
 import PreviewPanel from "./preview"
+import { AIAssistant } from "./ai-assitant"
 
 interface EditPostDialogProps {
     open: boolean
@@ -232,14 +233,13 @@ export function EditPostDialog({
                                 <div className="py-4 flex-1 h-full flex flex-col">
                                     {selectedRightTab === "ai" && (
                                         <div className="px-6 flex flex-col">
-                                            {/* <AIAssistant
+                                            <AIAssistant
                                                 content={content}
-                                                channelId={post?.channel_types?.id}
+                                                channelId={post?.channel?.id}
                                                 onGenerate={(generatedText) => {
-                                                    console.log(generatedText)
                                                     setContent(generatedText)
                                                 }}
-                                            /> */}
+                                            />
                                         </div>
                                     )}
                                     {selectedRightTab === "ideas" && (

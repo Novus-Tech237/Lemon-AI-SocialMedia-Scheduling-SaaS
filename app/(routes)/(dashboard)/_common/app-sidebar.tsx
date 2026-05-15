@@ -16,6 +16,8 @@ import { PlusSignIcon } from '@hugeicons/core-free-icons';
 import { UserButton, useUser } from '@clerk/nextjs';
 import ChannelAvatar from '@/components/channel-avatar';
 import { toast } from 'sonner';
+import { useState } from 'react';
+import CreatePostDialog from '@/components/schedule/create-post-dialog';
 
 const mainNav = [
   { name: "Ideas", href: "/ideas", icon: Lightbulb },
@@ -29,6 +31,7 @@ const AppSidebar = () => {
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
   const { user } = useUser()
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState<boolean>(false)
 
    const connectMutation = useMutation({
     mutationFn: async (channelTypeId: string) => {
@@ -78,6 +81,7 @@ const AppSidebar = () => {
  
 
   return (
+    <>
     <Sidebar collapsible="icon">
       <SidebarHeader className={cn("p-4", isCollapsed && "p-2")}>
         <div className='flex items-center justify-between'>
@@ -86,6 +90,7 @@ const AppSidebar = () => {
         </div>
         <Button className='mt-4 w-full'
          size={isCollapsed ? "icon": "lg"}
+         onClick={() => setIsCreatePostOpen(true)}
         >
             <Plus className="size-4" />
            {!isCollapsed && <span>New Post</span>}
@@ -230,6 +235,11 @@ const AppSidebar = () => {
         </div>
       </SidebarFooter>
     </Sidebar>
+     <CreatePostDialog
+        open={isCreatePostOpen}
+        onOpenChange={setIsCreatePostOpen}
+      />
+    </>
   )
 }
 
