@@ -23,7 +23,8 @@ export async function PATCH(request:NextRequest,
         if (content) updateData.content = content;
         if (Array.isArray(images)) updateData.images = images;
         if (scheduledAt) updateData.scheduled_at = scheduledAt;
-        if (status && status === POST_STATUS.DRAFT) updateData.status = status;
+        const postStatus = status === POST_STATUS.DRAFT ? POST_STATUS.DRAFT : POST_STATUS.QUEUE;
+        updateData.status = postStatus;
 
         const {data,error} = await insforge.database
         .from("scheduled_posts")
