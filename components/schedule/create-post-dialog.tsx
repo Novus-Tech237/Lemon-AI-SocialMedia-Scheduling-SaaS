@@ -121,8 +121,9 @@ const CreatePostDialog = ({ open, onOpenChange, selectedDate }: PropsType) => {
         },
         onSuccess: (data, variables) => {
             toast.success(`${data.posts.length} post(s) ${variables.status === POST_STATUS.DRAFT ? 'saved to draft' : 'scheduled'} successfully`);
-            queryClient.invalidateQueries({ queryKey: ["posts"] });
-            queryClient.invalidateQueries({ queryKey: ["posts", "totals"] });
+            queryClient.invalidateQueries({
+                predicate: (query) => query.queryKey[0] === "posts",
+            });
             handleOpenChange(false)
         },
         onError: (error: any) => {

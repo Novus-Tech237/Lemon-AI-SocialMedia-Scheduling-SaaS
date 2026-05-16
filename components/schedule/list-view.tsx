@@ -8,12 +8,13 @@ import ScheduleToolbar from "./schedule-toolbar";
 import { Skeleton } from "../ui/skeleton";
 import { AlarmClockCheck, ExternalLink, LayoutList, Pin, Plus, Send } from "lucide-react";
 import { Button } from "../ui/button";
-import { format, formatDistanceToNow, parseISO } from "date-fns";
+import { format, formatDistanceToNow, isPast, parseISO } from "date-fns";
 import { Card, CardContent, CardFooter } from "../ui/card";
 import ChannelAvatar from "../channel-avatar";
 import { EditPostDialog } from "./edit-post-dialog";
 import { toast } from "sonner";
 import { Spinner } from "../ui/spinner";
+import { cn } from "@/lib/utils";
 
 type TabType = "draft" | "queue" | "published" | "failed";
 
@@ -38,6 +39,30 @@ const ListView = ({ setCreatePostModalOpen }: {
 
   const [selectedPostForEdit, setSelectedPostForEdit] = useState<PostType | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+
+    // const { data, isFetching:isPending } = useQuery({
+  //   queryKey: ["posts", activeTab, channelIds],
+  //   queryFn: async () => {
+  //     const params = new URLSearchParams()
+  //     params.append("group_by_date", "true")
+  //     if (activeTab) params.append("status", activeTab)
+  //     if (channelIds.length > 0) params.append("channelIds", channelIds.join(","))
+  //     const res = await fetch(`/api/post?${params.toString()}`);
+  //     if (!res.ok) throw new Error("Failed to fetch posts");
+  //     return res.json();
+  //   },
+  // })
+
+  //  const { data:totalPosts } = useQuery({
+  //   queryKey: ["posts", "totals", channelIds],
+  //   queryFn: async () => {
+  //     const params = new URLSearchParams()
+  //     if (channelIds.length > 0) params.append("channelIds", channelIds.join(","))
+  //     const res = await fetch(`/api/post/totals?${params.toString()}`);
+  //     if (!res.ok) throw new Error("Failed to fetch posts");
+  //     return res.json();
+  //   }
+  // })
 
   const [postsQuery, totalsQuery] = useQueries({
     queries: [
@@ -69,30 +94,9 @@ const ListView = ({ setCreatePostModalOpen }: {
   const data = postsQuery.data
   const isPending = postsQuery.isFetching
   const totalPosts = totalsQuery.data
+  const isTotalsFetching = totalsQuery.isFetching
 
-  // const { data, isFetching:isPending } = useQuery({
-  //   queryKey: ["posts", activeTab, channelIds],
-  //   queryFn: async () => {
-  //     const params = new URLSearchParams()
-  //     params.append("group_by_date", "true")
-  //     if (activeTab) params.append("status", activeTab)
-  //     if (channelIds.length > 0) params.append("channelIds", channelIds.join(","))
-  //     const res = await fetch(`/api/post?${params.toString()}`);
-  //     if (!res.ok) throw new Error("Failed to fetch posts");
-  //     return res.json();
-  //   },
-  // })
 
-  //  const { data:totalPosts } = useQuery({
-  //   queryKey: ["posts", "totals", channelIds],
-  //   queryFn: async () => {
-  //     const params = new URLSearchParams()
-  //     if (channelIds.length > 0) params.append("channelIds", channelIds.join(","))
-  //     const res = await fetch(`/api/post/totals?${params.toString()}`);
-  //     if (!res.ok) throw new Error("Failed to fetch posts");
-  //     return res.json();
-  //   }
-  // })
 
   const publishPostMutation = useMutation({
     mutationFn: async (postId: string) => {
@@ -104,8 +108,9 @@ const ListView = ({ setCreatePostModalOpen }: {
     },
     onSuccess: () => {
       toast.success("Post processing...")
-      queryClient.invalidateQueries({ queryKey: ["posts", activeTab, channelIds] });
-      queryClient.invalidateQueries({ queryKey: ["posts", "totals", channelIds] });
+      queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === "posts",
+      });
     }
   })
 
@@ -115,6 +120,12 @@ const ListView = ({ setCreatePostModalOpen }: {
   const totalQueue = totalPosts?.totalQueue || 0
   const totalPublished = totalPosts?.totalPublished || 0
   const totalFailed = totalPosts?.totalFailed || 0
+
+  const renderTotalBadge = (total: number) => (
+    <Badge variant="secondary" className="min-w-6">
+      {isTotalsFetching ? <Spinner className="size-3" /> : total}
+    </Badge>
+  )
 
   const toggleChannel = (channelId: string) => {
     setChannelIds((prev) => {
@@ -149,16 +160,16 @@ const ListView = ({ setCreatePostModalOpen }: {
           <Tabs value={activeTab || "draft"} onValueChange={(val) => setActiveTab(val)}>
             <TabsList variant="line" className="space-x-4">
               <TabsTrigger value="draft">
-                Draft <Badge variant="secondary">{totalDrafts}</Badge>
+                Draft {renderTotalBadge(totalDrafts)}
               </TabsTrigger>
               <TabsTrigger value="queue">
-                Queue <Badge variant="secondary">{totalQueue}</Badge>
+                Queue {renderTotalBadge(totalQueue)}
               </TabsTrigger>
               <TabsTrigger value="published">
-                Published <Badge variant="secondary">{totalPublished}</Badge>
+                Published {renderTotalBadge(totalPublished)}
               </TabsTrigger>
               <TabsTrigger value="failed">
-                Failed <Badge variant="secondary">{totalFailed}</Badge>
+                Failed {renderTotalBadge(totalFailed)}
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -219,9 +230,24 @@ const ListView = ({ setCreatePostModalOpen }: {
                               <h5>
                                 {format(scheduleDate, "h:mm a")}
                               </h5>
-                              <div className="flex items-center gap-2 text-muted-foreground">
+                              {/* <div className="flex items-center gap-2 text-muted-foreground">
                                 <Pin className="size-4" />
                                 <span>{post.status === "draft" ? "Draft" : "Custom"}</span>
+                              </div> */}
+                              <div className={cn(
+                                "flex items-center gap-2",
+                                isPast(scheduleDate) && (post.status === "queue" || post.status === "draft")
+                                  ? "text-destructive"
+                                  : "text-muted-foreground"
+                              )}>
+                                <Pin className="size-4" />
+                                <span className="capitalize">
+                                  {isPast(scheduleDate) && (post.status === "queue" || post.status === "draft")
+                                    ? "Overdue"
+                                    : post.status === "draft"
+                                      ? "Draft"
+                                      : "Custom"}
+                                </span>
                               </div>
                             </div>
 

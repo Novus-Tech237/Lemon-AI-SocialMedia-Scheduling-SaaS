@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const searchParams = request.nextUrl.searchParams
-    const channelIds = searchParams.getAll("channels")
+    const channelIds = searchParams.getAll("channelIds")
       .flatMap((value) => value.split(",")).filter(Boolean)
 
     const countQuery = (status: string) => {
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     if (failed.error) throw failed.error
 
     return NextResponse.json({
-      totalDraft: draft.count ?? 0,
+      totalDrafts: draft.count ?? 0,
       totalQueue: queue.count ?? 0,
       totalPublished: published.count ?? 0,
       totalFailed: failed.count ?? 0,

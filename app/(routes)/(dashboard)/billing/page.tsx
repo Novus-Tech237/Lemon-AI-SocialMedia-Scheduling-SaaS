@@ -19,6 +19,7 @@ const BillingPage = () => {
       <ClerkLoaded>
       <PricingTable
         for="user"
+        newSubscriptionRedirectUrl="/billing"
       />
       </ClerkLoaded>
     </div>
