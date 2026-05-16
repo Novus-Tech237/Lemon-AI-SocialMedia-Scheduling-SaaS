@@ -67,7 +67,7 @@ export function EditPostDialog({
             content: string,
             images: ImageObject[],
             scheduledAt: string,
-            status: PostStatus,
+            status?: PostStatus,
             userChannelId: string
         }) => {
             const response = await fetch(`/api/post/${postId}`, {
@@ -120,7 +120,7 @@ export function EditPostDialog({
     const channel = post?.channel
     const icon = channel ? getChannelIcon(channel.type) : null
 
-    const handleUpdate = (status: PostStatus) => {
+    const handleUpdate = (status?: PostStatus) => {
         if (!post) return
         const parsedTime = parse(time, "h:mm a", new Date())
         const finalDate = set(date || new Date(), {
@@ -135,7 +135,7 @@ export function EditPostDialog({
             content,
             images,
             scheduledAt: finalDate.toISOString(),
-            status,
+            status: status,
             userChannelId: post.userChannelId
         });
     }
@@ -269,7 +269,7 @@ export function EditPostDialog({
                             onClick={() => handleUpdate(POST_STATUS.DRAFT)}
                             disabled={updatePostMutation.isPending}
                         >
-                            {updatePostMutation.isPending && <Spinner />}
+                            {updatePostMutation.isPending && updatePostMutation.variables?.status === POST_STATUS.DRAFT && <Spinner />}
                             Save Draft
                         </Button>
                         <ButtonGroup className="p-0!">
@@ -283,11 +283,11 @@ export function EditPostDialog({
                                             toast.error("Please select a valid time")
                                             return;
                                         }
-                                        handleUpdate(POST_STATUS.QUEUE)
+                                        handleUpdate()
                                     }}
                                     disabled={updatePostMutation.isPending || !date || !time || isTimeNotAvailable || isDatePassed}
                                 >
-                                    {updatePostMutation.isPending && <Spinner />}
+                                    {updatePostMutation.isPending && updatePostMutation.variables?.status === undefined && <Spinner />}
                                     Schedule Post
                                 </Button>}
                             />

@@ -8,14 +8,13 @@ const PROJECT_API_KEY = process.env.INSFORGE_PROJECT_API_KEY
 const TEMPLATE = process.env.CLERK_INSFORGE_TEMPLATE;
 
 const SERVER_TOKEN_TEMPLATE = TEMPLATE || 'insforge';
+
 const TOKEN_REFRESH_MS = 50_000; // Clerk template tokens expire in 60s by default
 
-// Module-scoped cache
 let cachedClient: InsForgeClient | null = null;
 let cachedUserId: string | null = null;
 let refreshInterval: NodeJS.Timeout | null = null;
 
-// Helper function to refresh token
 async function refreshAuthToken(client: InsForgeClient, retries = 3): Promise<void> {
   try {
     const session = await auth();
@@ -30,14 +29,46 @@ async function refreshAuthToken(client: InsForgeClient, retries = 3): Promise<vo
     //   console.log(`Retrying token refresh... (${retries} retries left)`);
     //   setTimeout(() => refreshAuthToken(client, retries - 1), 1000);
     // }else {
-      console.error('Failed to refresh Clerk token for InsForge client', err);
+    console.error('Failed to refresh Clerk token for InsForge client', err);
     client.getHttpClient().setAuthToken(null);
-    
   }
 }
 
+/*
+// Per-request client version I tried. Keeping here only for comparison.
 export async function getInsforgeServerClient(): Promise<{ insforge: InsForgeClient; userId: string | null }> {
-  // Validate environment variables
+  if (!BASE_URL) {
+    throw new Error('Missing NEXT_PUBLIC_INSFORGE_BASE_URL or INSFORGE_BASE_URL environment variable');
+  }
+  if (!ANON_KEY) {
+    throw new Error('Missing NEXT_PUBLIC_INSFORGE_ANON_KEY or INSFORGE_ANON_KEY environment variable');
+  }
+
+  const session = await auth();
+  const { userId } = session;
+
+  const insforge = createClient({
+    baseUrl: BASE_URL,
+    anonKey: ANON_KEY,
+    isServerMode: true,
+  });
+
+  if (userId) {
+    const token = await session.getToken({ template: SERVER_TOKEN_TEMPLATE });
+
+    if (token) {
+      insforge.getHttpClient().setAuthToken(token);
+    } else {
+      console.error('No Clerk token received for InsForge client');
+      insforge.getHttpClient().setAuthToken(null);
+    }
+  }
+
+  return { insforge, userId };
+}
+*/
+
+export async function getInsforgeServerClient(): Promise<{ insforge: InsForgeClient; userId: string | null }> {
   if (!BASE_URL) {
     throw new Error('Missing NEXT_PUBLIC_INSFORGE_BASE_URL or INSFORGE_BASE_URL environment variable');
   }
@@ -74,6 +105,8 @@ export async function getInsforgeServerClient(): Promise<{ insforge: InsForgeCli
         }
       }, TOKEN_REFRESH_MS);
     }
+  } else if (userId) {
+    await refreshAuthToken(cachedClient);
   }
 
   return { insforge: cachedClient, userId };

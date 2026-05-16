@@ -15,14 +15,14 @@ export async function PATCH(request:NextRequest,
         const {
             content,
             images,
-            scheduled_at,
+            scheduledAt,
             status
         } = await request.json();
 
         const updateData:any = {};
         if (content) updateData.content = content;
         if (Array.isArray(images)) updateData.images = images;
-        if (scheduled_at) updateData.scheduled_at = scheduled_at;
+        if (scheduledAt) updateData.scheduled_at = scheduledAt;
         if (status && status === POST_STATUS.DRAFT) updateData.status = status;
 
         const {data,error} = await insforge.database
