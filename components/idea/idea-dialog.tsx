@@ -10,6 +10,7 @@ import { Button } from "../ui/button"
 import { Spinner } from "../ui/spinner"
 import ContentTextarea from "../content-textarea"
 import { AIAssistant } from "../schedule/ai-assitant"
+import { Textarea } from "../ui/textarea"
 
 
 type IdeaDialogProps = {
@@ -67,13 +68,13 @@ const IdeaDialog = ({
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
                 className={cn(
-                    `flex gap-0 p-0 overflow-hidden sm:w-[95%] sm:min-w-[550px] h-auto!`,
+                    `flex max-h-[90vh] gap-0 overflow-hidden p-0 sm:w-[95%] sm:min-w-[550px]`,
                     showAI && "sm:max-w-[900px]"
                 )}
             >
-                <div className="flex flex-1">
-                    <div className="flex flex-1 flex-col w-full">
-                        <DialogHeader className="flex flex-row items-center justify-between px-5 py-4">
+                <div className="flex min-h-0 flex-1">
+                    <div className="flex min-w-0 flex-1 flex-col">
+                        <DialogHeader className="shrink-0 flex flex-row items-center justify-between px-5 py-4">
                             <DialogTitle className="text-base font-semibold">
                                 {isEdit ? "Edit Idea" : "Create Idea"}
                             </DialogTitle>
@@ -96,15 +97,16 @@ const IdeaDialog = ({
                             </div>
                         </DialogHeader>
 
-                        <div className="flex flex-1 flex-col gap-px
-       overflow-y-auto px-5 py-2">
+                        <div className="flex min-h-0 flex-1 flex-col gap-px overflow-y-auto px-5 py-2">
 
-                            <Input
+                            <Textarea
                                 value={title}
                                 placeholder="Give your idea a title"
                                 onChange={(e) => setTitle(e.target.value)}
-                                className="border-0 px-0 text-xl! font-semibold
-          shadow-none placeholder:font-semibold  bg-transparent!
+                                rows={2}
+                                className="w-full min-w-0 border-0 px-0 text-xl! font-semibold
+          shadow-none placeholder:font-semibold bg-transparent! resize-none! whitespace-pre-wrap wrap-break-word
+          overflow-wrap-anywhere overflow-hidden
           focus-visible:ring-0"
                             />
 
@@ -119,7 +121,7 @@ const IdeaDialog = ({
                             />
                         </div>
 
-                        <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-3">
+                        <div className="shrink-0 flex items-center justify-end gap-2 border-t border-border px-5 py-3">
                             <Button
                                 size="lg"
                                 disabled={isSaving || !title.trim()}

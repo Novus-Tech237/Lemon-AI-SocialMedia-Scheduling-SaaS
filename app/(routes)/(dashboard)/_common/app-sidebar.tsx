@@ -123,7 +123,15 @@ const AppSidebar = () => {
           <SidebarGroupLabel className='text-sm'>Channels</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-                {connectedChannels?.map((channel: ChannelType) => {
+               {isPending ? (
+                <div className='flex flex-col gap-2'>
+                  <Skeleton className='h-8 w-full bg-secondary' />
+                  <Skeleton className='h-8 w-full bg-secondary' />
+                  <Skeleton className='h-8 w-full bg-secondary' />
+                  <Skeleton className='h-8 w-full bg-secondary' />
+                </div>
+              ) : (
+                connectedChannels?.map((channel: ChannelType) => {
                   const url = getChannelUrl(channel.type)
                   return (
                     <SidebarMenuItem key={channel.id}>
@@ -145,7 +153,8 @@ const AppSidebar = () => {
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   )
-                })}
+                })
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
          </SidebarGroup>
