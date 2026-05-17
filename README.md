@@ -53,9 +53,9 @@ If this project helps you, you can support my work by:
 
 2. Create a **project** and connect it to your AI code editor.
 
-3. Go to **Settings** → copy your `BASE_URL` & `APIKEY` → paste into your `.env` file.
+3. Click Install on the insforge dashboard  **** → copy your `BASE_URL`, `ANON_KEY` & `APIKEY` → paste into your `.env` file.
 
-4. Enable your preferred AI models inside **Model Gateway**.
+4. Enable your Gemini AI models inside **Model Gateway**.
 
 5. Watch the full video tutorial to follow the complete build process.
 
