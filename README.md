@@ -4,7 +4,7 @@
 >
 > This project is **Free for Personal Use**. A commercial license is **required** for any use of the code (in part or whole) for SaaS, client work, or production apps.
 >
-> 👉 **[Get Commercial License](https://techwithemma.gumroad.com/l/ttxdw)**
+> 👉 **[Get Commercial License (30% OFF)](https://techwithemma.gumroad.com/l/ttxdw)**
 > 👉 **[Read License Terms](https://github.com/TechWithEmmaYT/)**
 
 ---
