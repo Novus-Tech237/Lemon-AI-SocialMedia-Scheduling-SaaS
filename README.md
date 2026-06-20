@@ -1,4 +1,4 @@
-# 🍋 Lemon AI – AI Social Media Scheduling Platform
+# 🍋 Ana AI – AI Social Media Scheduling Platform
 
 > ### Commercial License Required
 >
@@ -22,7 +22,7 @@ If this project helps you, you can support my work by:
 
 ## Watch the Full Build on YouTube
 
-> In this video, you’ll build **Lemon AI**, an AI-powered Social Media Scheduling Platform from scratch. Learn how to manage multiple social channels, generate AI-powered content, automate scheduled posts with cron jobs, organize ideas using a Kanban board, and build a modern production-ready SaaS application.
+> In this video, you’ll build **Ana AI**, an AI-powered Social Media Scheduling Platform from scratch. Learn how to manage multiple social channels, generate AI-powered content, automate scheduled posts with cron jobs, organize ideas using a Kanban board, and build a modern production-ready SaaS application.
 
 👉 [Watch the Full Tutorial](https://www.youtube.com/)
 

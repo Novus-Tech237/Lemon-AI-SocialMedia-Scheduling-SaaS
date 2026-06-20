@@ -1,23 +1,35 @@
-"use client";
+"use client"
+import Image from "next/image";
+import { usePathname } from "next/navigation";
 
-import { LeafIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+export const Logo = () => {
+    const pathname = usePathname();
 
-interface LogoProps {
-  name?: string;
-  className?: string;
-  hideName?: boolean;
-}
+    // Conditionally apply mt-2 only on "/splash"
+    const extraClass = pathname === "/splash" ? "mt-2" : "";
 
-const Logo = ({ name = "Lemon.ai", className, hideName = false }: LogoProps) => {
-  return (
-    <div className={cn("flex items-center gap-2", className)}>
-      <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-        <LeafIcon className="h-4 w-4" />
-      </div>
-      {!hideName && <span className="text-base font-bold">{name}</span>}
-    </div>
-  );
-}
+    return (
+        <div className={extraClass}>
+            {/* Light theme logo — hidden when .dark is on <html> */}
+            <Image
+                height={100}
+                width={100}
+                alt="logo"
+                src="/images/ana-b.png"
+                priority
+                className="block dark:hidden"
+            />
+            {/* Dark theme logo — shown only when .dark is on <html> */}
+            <Image
+                height={100}
+                width={100}
+                alt="logo"
+                src="/images/ana-w.png"
+                priority
+                className="hidden dark:block"
+            />
+        </div>
+    );
+};
 
 export default Logo;
