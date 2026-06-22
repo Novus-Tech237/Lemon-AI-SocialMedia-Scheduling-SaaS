@@ -45,22 +45,22 @@ const SectionTwoPage = () => {
                         </span>
                     </motion.p>
                     <motion.div
-                        className="mt-10 flex gap-12"
+                        className="mt-10 grid grid-cols-3 gap-4 sm:flex sm:gap-12"
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8, delay: 0.4 }}
                     >
                         <div>
-                            <div className="text-5xl font-bold text-foreground">2K+</div>
-                            <div className="mt-2 text-sm leading-snug text-muted-foreground">Posts on social <br/> platforms</div>
-                        </div>
-                         <div>
-                            <div className="text-5xl font-bold text-foreground">3.2M</div>
-                            <div className="mt-2 text-sm leading-snug text-muted-foreground">Likes on social <br/> platform posts</div>
+                            <div className="text-3xl font-bold text-foreground sm:text-5xl">2K+</div>
+                            <div className="mt-2 text-xs leading-snug text-muted-foreground sm:text-sm">Posts on social platforms</div>
                         </div>
                         <div>
-                            <div className="text-5xl font-bold text-foreground">92%</div>
-                            <div className="mt-2 text-sm leading-snug text-muted-foreground">Satisfied social<br />Platform Users</div>
+                            <div className="text-3xl font-bold text-foreground sm:text-5xl">3.2M</div>
+                            <div className="mt-2 text-xs leading-snug text-muted-foreground sm:text-sm">Likes on social platform posts</div>
+                        </div>
+                        <div>
+                            <div className="text-3xl font-bold text-foreground sm:text-5xl">92%</div>
+                            <div className="mt-2 text-xs leading-snug text-muted-foreground sm:text-sm">Satisfied social platform users</div>
                         </div>
                     </motion.div>
                 </div>
