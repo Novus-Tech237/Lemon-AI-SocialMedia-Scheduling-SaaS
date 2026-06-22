@@ -85,7 +85,7 @@ const AppSidebar = () => {
     <Sidebar collapsible="icon">
       <SidebarHeader className={cn("p-4", isCollapsed && "p-2")}>
         <div className='flex items-center justify-between'>
-           <Logo hideName={isCollapsed} />
+           <Logo />
         </div>
         <Button className='mt-4 w-full'
          size={isCollapsed ? "icon": "lg"}

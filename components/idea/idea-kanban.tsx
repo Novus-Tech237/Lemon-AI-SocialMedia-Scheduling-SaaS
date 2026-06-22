@@ -340,6 +340,7 @@ p-2 px-3 transition-colors min-h-0`,
                                                 <Card
                                                     ref={provided.innerRef}
                                                     {...provided.draggableProps}
+                                                    style={provided.draggableProps.style as React.CSSProperties}
                                                     {...provided.dragHandleProps}
                                                     className={cn(
                                                         "group cursor-pointer! shadow-sm rounded-sm! active:cursor-grabbing transform transition-all",
