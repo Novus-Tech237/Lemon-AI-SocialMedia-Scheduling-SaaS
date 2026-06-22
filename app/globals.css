@@ -132,6 +132,15 @@ iframe[src*="__clerk_db_jwt"],
   border: none !important;
 }
 
+/* Hide scrollbars while keeping scroll (used by horizontal tab strips on mobile) */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Staggered slide-in for the mobile navbar menu items */
 @keyframes slideIn {
   from {
@@ -150,8 +159,13 @@ iframe[src*="__clerk_db_jwt"],
   }
   body {
     @apply bg-background text-foreground;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
   html {
     @apply font-sans;
+  }
+  body::-webkit-scrollbar {
+    display: none;
   }
 }

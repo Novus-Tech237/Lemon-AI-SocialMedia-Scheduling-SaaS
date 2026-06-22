@@ -21,8 +21,8 @@ const SettingsPage = () => {
 
         <div>
           <Tabs defaultValue="channels">
-            <div className="mb-6 w-full border-b">
-              <TabsList variant="line" className="w-fit space-x-4
+            <div className="mb-6 w-full overflow-x-auto no-scrollbar border-b">
+              <TabsList variant="line" className="w-max space-x-4
               group-data-horizontal/tabs:h-12
               ">
                 <TabsTrigger value="profile">

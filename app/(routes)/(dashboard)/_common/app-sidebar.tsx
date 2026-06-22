@@ -86,7 +86,6 @@ const AppSidebar = () => {
       <SidebarHeader className={cn("p-4", isCollapsed && "p-2")}>
         <div className='flex items-center justify-between'>
            <Logo hideName={isCollapsed} />
-           <SidebarTrigger className="hidden md:flex -mx-8 mb-0" />
         </div>
         <Button className='mt-4 w-full'
          size={isCollapsed ? "icon": "lg"}

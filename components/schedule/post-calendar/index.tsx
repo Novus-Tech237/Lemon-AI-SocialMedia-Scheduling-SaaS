@@ -3,7 +3,7 @@ import * as React from "react"
 import { Calendar, dateFnsLocalizer, Views } from "react-big-calendar"
 import { format, parse, startOfWeek, getDay, addHours, isBefore, startOfDay } from "date-fns"
 import { enUS } from "date-fns/locale"
-import { ChevronLeft, ChevronRight, Plus, } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import "react-big-calendar/lib/css/react-big-calendar.css"
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getChannelIcon } from "@/constants/channels"
 import { PostType } from "@/types/post.type"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 const locales = { "en-US": enUS }
 const localizer = dateFnsLocalizer({
@@ -58,21 +59,24 @@ export function PostCalendar({
     })), [posts, isPending]
   )
 
+  const isMobile = useIsMobile()
+
   const formats = React.useMemo(() => ({
+    // Shorten weekday headers on mobile so they fit narrow cells (Mon vs Monday / M in week view)
     weekdayFormat: (date: Date, culture?: string, localizer?: any) =>
-      localizer.format(date, 'EEEE', culture),
+      localizer.format(date, isMobile ? 'EEE' : 'EEEE', culture),
 
     dayFormat: (date: Date, culture?: string, localizer?: any) =>
-      localizer.format(date, 'EEEE d', culture),
-  }), []);
+      localizer.format(date, isMobile ? 'EEEEE d' : 'EEEE d', culture),
+  }), [isMobile]);
 
   const isWeekView = view === "week"
 
   const CustomToolbar = (toolbar: any) => {
     return (
       <div className="flex flex-col gap-4 mb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <div className="flex items-center border rounded-md overflow-hidden">
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-none border-r" onClick={() => toolbar.onNavigate('PREV')}>
                 <ChevronLeft className="h-4 w-4" />
@@ -100,7 +104,7 @@ export function PostCalendar({
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:justify-end">
             {rightActions}
           </div>
         </div>
@@ -123,7 +127,9 @@ export function PostCalendar({
         view={view === "month" ? Views.MONTH : Views.WEEK}
         onView={(v) => onViewChange(v === Views.MONTH ? "month" : "week")}
         onSelectEvent={(event: any) => onPostClick(event)}
-        //onSelectSlot={({ start }) => onCreatePost(start)}
+        // On mobile there's no per-cell "+" button, so let tapping a day create a post
+        selectable={isMobile}
+        onSelectSlot={({ start }) => onCreatePost(start)}
       
         // In week view, disable past time slots 
         // and style them differently
@@ -157,7 +163,7 @@ export function PostCalendar({
             return (
               <>
                 <div
-                  className="flex items-center gap-2 px-2 py-1 h-full"
+                  className="flex items-center gap-1 px-1 py-1 h-full sm:gap-2 sm:px-2"
                   style={{ backgroundColor: color + "20", borderLeft: `3px solid ${color}` }}
                   onClick={() => onPostClick(event)}
                 >
@@ -167,8 +173,8 @@ export function PostCalendar({
                     style={{
                       background: color
                     }} />}
-                  <span className="text-xs truncate max-w-[100px]">{event?.title}</span>
-                  <span className="font-semibold">{format(event.scheduled_at, "h:mm a")}</span>
+                  <span className="hidden truncate text-xs sm:inline sm:max-w-[100px]">{event?.title}</span>
+                  <span className="text-[10px] font-semibold sm:text-xs">{format(event.scheduled_at, "h:mm a")}</span>
                 </div>
               </>
             )
@@ -180,27 +186,24 @@ export function PostCalendar({
               const isPastDate = isBefore(cellDate, startOfDay(new Date()))
               return (
                 <>
-                  <div className="group flex items-center justify-between w-full">
-                    <span className={cn(
-                      "flex h-6 w-6 items-center justify-center rounded-full text-sm font-medium",
-                      isCellToday ? "bg-green-500 text-white" : isPastDate ? "text-muted-foreground" : "text-foreground"
-                    )}>
+                  <div className="flex items-center justify-start w-full">
+                    <span
+                      onClick={(e) => {
+                        if (isPastDate || isPending) return
+                        e.stopPropagation()
+                        onCreatePost(cellDate)
+                      }}
+                      className={cn(
+                        "flex h-6 w-6 items-center justify-center rounded-full text-sm font-medium transition-colors",
+                        isCellToday
+                          ? "bg-green-500 text-white"
+                          : isPastDate
+                          ? "cursor-default text-muted-foreground"
+                          : "cursor-pointer text-foreground hover:bg-primary hover:text-primary-foreground"
+                      )}
+                    >
                       {label}
                     </span>
-                    {!isPastDate && !isPending && (
-                      <Button
-                        size="icon-sm"
-                        variant="default"
-                        className="p-px! size-6! mt-1"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onCreatePost(cellDate)
-                        }}
-                      >
-                        <Plus className="size-3" />
-                      </Button>
-                    )}
-
                   </div>
                   {isPending && <Skeleton className="h-8 w-11/12 m-2 my-5" />}
                 </>

@@ -155,10 +155,10 @@ const ListView = ({ setCreatePostModalOpen }: {
 
   return (
     <>
-      <div className="flecx flex-col h-full pt-3">
-        <div className="flex items-center justify-between border-b px-6">
-          <Tabs value={activeTab || "draft"} onValueChange={(val) => setActiveTab(val)}>
-            <TabsList variant="line" className="space-x-4">
+      <div className="flex flex-col h-full pt-3">
+        <div className="flex flex-col gap-2 border-b px-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <Tabs value={activeTab || "draft"} onValueChange={(val) => setActiveTab(val)} className="w-full sm:w-auto">
+            <TabsList variant="line" className="w-full justify-start space-x-4 overflow-x-auto no-scrollbar">
               <TabsTrigger value="draft">
                 Draft {renderTotalBadge(totalDrafts)}
               </TabsTrigger>
@@ -173,16 +173,18 @@ const ListView = ({ setCreatePostModalOpen }: {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          <ScheduleToolbar
-            viewType="list"
-            channelIds={channelIds}
-            toggleChannel={toggleChannel}
-            selectedStatus={activeTab}
-            setSelectedStatus={setActiveTab}
-          />
+          <div className="flex shrink-0 justify-end pb-2 sm:pb-0">
+            <ScheduleToolbar
+              viewType="list"
+              channelIds={channelIds}
+              toggleChannel={toggleChannel}
+              selectedStatus={activeTab}
+              setSelectedStatus={setActiveTab}
+            />
+          </div>
         </div>
 
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-3 sm:p-6">
           <div className="max-w-[900px] mx-auto w-full space-y-2">
             {isPending ? (
               <div className="space-y-8">

@@ -242,17 +242,17 @@ const IdeaKanban = () => {
     return (
         <>
             <div className="flex flex-col overflow-hidden">
-                <header className="flex items-center justify-between border-b px-6 py-4">
+                <header className="flex flex-col gap-3 border-b px-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                     <div>
                         <h1 className="text-xl font-semibold">Ideas</h1>
                         <p className="text-sm text-muted-foreground">
                             Capture and organize your content ideas
                         </p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3">
                         {/* //GenerateIdea popover */}
                         <GenerateIdeasPopover onGenerated={handleGeneratedIdea} />
-                        <Button variant="outline" className="gap-2"
+                        <Button variant="outline" className="flex-1 gap-2 sm:flex-none"
                             onClick={() => handleAddIdea(columns[0]?.id ?? "")}
                         >
                             <Plus className="h-4 w-4" />
@@ -262,8 +262,8 @@ const IdeaKanban = () => {
                 </header>
 
 
-                <div className="h-[calc(100vh-120px)]">
-                    <div className="kanban--board relative py-6 flex-1 h-full overflow-hidden">
+                <div className="h-[calc(100vh-180px)] md:h-[calc(100vh-120px)]">
+                    <div className="kanban--board relative py-4 sm:py-6 flex-1 h-full overflow-hidden px-3 sm:px-0">
                         {isPending ? (
                             <div className="flex gap-4 w-full h-full items-start">
                                 {[1, 2, 3, 4].map((i) => (
@@ -372,7 +372,7 @@ p-2 px-3 transition-colors min-h-0`,
                                                                         <Button
                                                                             size="icon"
                                                                             variant="ghost"
-                                                                            className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                                                                            className="h-6 w-6 opacity-100 md:opacity-0 md:group-hover:opacity-100"
                                                                         >
                                                                             <MoreHorizontal className="h-3.5 w-3.5" />
                                                                         </Button>

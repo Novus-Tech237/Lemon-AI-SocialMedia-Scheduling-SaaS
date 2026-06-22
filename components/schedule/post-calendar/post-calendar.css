@@ -98,3 +98,43 @@
 .dark .rbc-event {
   box-shadow: none;
 }
+
+/* Mobile: tighten the calendar so cells, headers and events stay legible */
+@media (max-width: 767px) {
+  .rbc-header {
+    padding: 4px 2px !important;
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .rbc-event {
+    font-size: 10px;
+    padding: 0 !important;
+  }
+  .rbc-row-segment {
+    padding: 0 1px !important;
+  }
+  .rbc-date-cell {
+    font-size: 11px;
+    padding-right: 2px;
+  }
+  /* Give month rows enough height to tap day cells and the add button */
+  .rbc-month-view .rbc-row-content {
+    min-height: 84px;
+  }
+  .rbc-show-more {
+    font-size: 10px;
+    margin: 0 2px;
+  }
+  /* Week/time view: tighter gutter and slots */
+  .rbc-time-slot .rbc-label {
+    font-size: 11px;
+  }
+  .rbc-timeslot-group {
+    min-height: 36px;
+  }
+  .rbc-time-gutter .rbc-timeslot-group {
+    font-size: 10px;
+  }
+}

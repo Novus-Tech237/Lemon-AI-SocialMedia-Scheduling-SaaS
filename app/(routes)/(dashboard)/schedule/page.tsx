@@ -21,12 +21,12 @@ const SchedulePageContent = () => {
   const [createPostModalOpen, setCreatePostModalOpen] = useState(false)
   return (
     <div className="flex flex-col h-full">
-      <header className="flex items-center justify-between px-6 pt-4 pb-2">
+      <header className="flex flex-col gap-3 px-3 pt-4 pb-2 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div>
           <h1 className="text-xl font-semibold">All Channels</h1>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between gap-2 sm:justify-end sm:gap-4">
           <ToggleGroup
             type="single"
             value={activeView}

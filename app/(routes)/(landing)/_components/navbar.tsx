@@ -48,10 +48,9 @@ export function Navbar() {
             {navItems.map((item) => (
               <button
                 key={item}
-                className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                className="flex items-center gap-1 text-sm text-black dark:text-white transition-colors hover:text-foreground"
               >
                 <span>{item}</span>
-                {item !== "Pricing" && <ChevronDown className="h-4 w-4" />}
               </button>
             ))}
           </nav>
@@ -64,15 +63,9 @@ export function Navbar() {
                 <Button asChild variant="outline" className="rounded-full px-5">
                   <Link href="/sign-in">Log in</Link>
                 </Button>
-                <Button asChild className="rounded-full px-5">
-                  <Link href="/sign-up">Get started for free</Link>
-                </Button>
               </>
             ) : (
               <>
-                <Button asChild className="rounded-full px-5">
-                  <Link href="/schedule">Open workspace</Link>
-                </Button>
                 <UserButton appearance={{ elements: { avatarBox: "h-9 w-9" } }} />
               </>
             )}
