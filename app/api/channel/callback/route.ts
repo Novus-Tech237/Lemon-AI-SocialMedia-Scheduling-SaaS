@@ -1,10 +1,11 @@
 import { ChannelTypeEnum } from "@/constants/channels";
 import { encrypt } from "@/lib/encryption";
-import { getInsforgeServerClient } from "@/lib/insforge-server";
+import { prisma } from "@/lib/prisma";
 import { getOAuthProvider } from "@/lib/social-oauth";
 import { getPkceCookieName } from "@/lib/social-oauth/pkce";
 import { verifyOAuthState } from "@/lib/social-oauth/state";
 import { OAuthProvider } from "@/lib/social-oauth/types";
+import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL!
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
             return response
         }
 
-        const { insforge, userId } = await getInsforgeServerClient()
+        const { userId } = await auth()
 
         if (!userId || userId !== state.userId) {
             const response = buildRedirectUrl(APP_URL, redirectTo, {
@@ -84,27 +85,41 @@ export async function GET(request: NextRequest) {
 
         console.log("callback", JSON.stringify(profile, null, 2))
 
+        const tokenExpiresAt = token.expiresAt ? new Date(token.expiresAt) : null
 
-        const payload = {
-            user_id: state.userId,
-            channel_type_id: state.channelTypeId,
-            provider_account_id: profile.providerAccountId ?? null,
-            handle: profile.handle ?? null,
-            profile_image: profile.profileImage ?? null,
-            access_token: encrypt(token.accessToken),
-            refresh_token: encrypt(token.refreshToken ?? null),
-            token_expires_at: token.expiresAt ?? null,
-            is_connected: true,
-            is_active: true,
-        }
-
-        const { error } = await insforge.database
-            .from("user_channels")
-            .upsert(payload, {
-                onConflict: "user_id,channel_type_id"
+        try {
+            await prisma.user_channels.upsert({
+                where: {
+                    user_id_channel_type_id: {
+                        user_id: state.userId,
+                        channel_type_id: state.channelTypeId,
+                    },
+                },
+                create: {
+                    user_id: state.userId,
+                    channel_type_id: state.channelTypeId,
+                    provider_account_id: profile.providerAccountId ?? null,
+                    handle: profile.handle ?? null,
+                    profile_image: profile.profileImage ?? null,
+                    access_token: encrypt(token.accessToken),
+                    refresh_token: encrypt(token.refreshToken ?? null),
+                    token_expires_at: tokenExpiresAt,
+                    is_connected: true,
+                    is_active: true,
+                },
+                update: {
+                    provider_account_id: profile.providerAccountId ?? null,
+                    handle: profile.handle ?? null,
+                    profile_image: profile.profileImage ?? null,
+                    access_token: encrypt(token.accessToken),
+                    refresh_token: encrypt(token.refreshToken ?? null),
+                    token_expires_at: tokenExpiresAt,
+                    is_connected: true,
+                    is_active: true,
+                },
             })
-
-        if (error) {
+        } catch (upsertError) {
+            console.error("Failed to upsert user channel:", upsertError)
             const response = buildRedirectUrl(APP_URL, redirectTo, {
                 connected: "false",
                 error: "failed_to_upsert_user_channel"
@@ -125,7 +140,7 @@ export async function GET(request: NextRequest) {
             connected: "false",
             error: "oauth_callback_failed"
         });
-        
+
         const stateParams = new URL(request.url).searchParams.get('state');
         if (stateParams) {
             const pkceCookieName = getPkceCookieName(stateParams);

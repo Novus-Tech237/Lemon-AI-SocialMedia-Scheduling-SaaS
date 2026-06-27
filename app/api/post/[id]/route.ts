@@ -1,5 +1,7 @@
 import { POST_STATUS } from "@/constants/post";
-import { getInsforgeServerClient } from "@/lib/insforge-server";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
+import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -9,7 +11,7 @@ export async function PATCH(request:NextRequest,
 ){
     try {
         const { id } = await params;
-        const { insforge, userId } = await getInsforgeServerClient();
+        const { userId } = await auth();
         if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const {
@@ -19,27 +21,25 @@ export async function PATCH(request:NextRequest,
             status
         } = await request.json();
 
-        const updateData:any = {};
+        const updateData: Prisma.scheduled_postsUpdateInput = {};
         if (content) updateData.content = content;
-        if (Array.isArray(images)) updateData.images = images;
-        if (scheduledAt) updateData.scheduled_at = scheduledAt;
+        if (Array.isArray(images)) updateData.images = images as Prisma.InputJsonValue;
+        if (scheduledAt) updateData.scheduled_at = new Date(scheduledAt);
         const postStatus = status === POST_STATUS.DRAFT ? POST_STATUS.DRAFT : POST_STATUS.QUEUE;
         updateData.status = postStatus;
 
-        const {data,error} = await insforge.database
-        .from("scheduled_posts")
-        .update(updateData)
-        .eq("id", id)
-        .eq("user_id", userId)
-        .select()
-        .single()
-        
-        if (error) {
-            console.error("Error updating post:", error);
-            return NextResponse.json({ error: "Failed to update post" }, { status: 500 });
+        const result = await prisma.scheduled_posts.updateMany({
+            where: { id, user_id: userId },
+            data: updateData,
+        })
+
+        if (result.count === 0) {
+            return NextResponse.json({ error: "Failed to update post" }, { status: 404 });
         }
-        
-        return NextResponse.json({ post:data});
+
+        const post = await prisma.scheduled_posts.findUnique({ where: { id } })
+
+        return NextResponse.json({ post });
     } catch (error) {
         console.error("Error updating post:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });

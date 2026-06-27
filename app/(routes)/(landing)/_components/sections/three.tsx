@@ -4,14 +4,15 @@ import { motion, type Variants } from "motion/react";
 import Image from "next/image";
 import { ArrowRight, Brain, Smartphone, Users2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
-const SectionOnePage = () => {
+const SectionThreePage = () => {
     const router = useRouter()
     const onClick = () => {
         router.push("/main")
     }
     return (
-        <div id="about" className="relative isolate overflow-hidden bg-background scroll-mt-24">
+        <div className="relative isolate overflow-hidden bg-background">
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute top-[5rem] -left-12 w-72 h-72 bg-slate-200/20 rounded-full blur-2xl"></div>
                 <div className="absolute top-1/3 -right-12 w-48 h-48 bg-slate-300/20 rounded-full blur-2xl"></div>
@@ -30,11 +31,10 @@ const SectionOnePage = () => {
                 >
                   
                     <Image
-                        src={"/images/0_1.jpeg"}
+                        src={"/images/app-show.png"}
                         alt="AI-powered social media scheduling dashboard"
                         height={800}
                         width={800}
-                        className="mx-auto mt-16 lg:mt-0 md:w-162.5 relative z-10 rounded-[55%_45%_40%_60%/45%_55%_45%_55%]"
                     />
                 </motion.div>
                 <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-lg lg:flex-shrink-0">
@@ -44,7 +44,7 @@ const SectionOnePage = () => {
                     whileInView={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.8 }}
                 >
-                    <span className="text-gradient md:whitespace-wrap">Schedule social posts with Artificial Intelligence</span>
+                    <span className="text-gradient md:whitespace-wrap">Capture Ideas before they fade away</span>
                 </motion.h1>
                 <motion.p
                         className="mt-10"
@@ -55,10 +55,10 @@ const SectionOnePage = () => {
                         <span
                             className={`text-lg leading-8 text-muted-foreground`}
                         >
-                           Plan, draft, and publish across every well-known platform from one workspace. Let AI handle the busywork so you can focus on growing your audience.
+                          Turn a passing thought into a scheduled post. Add a title, describe your angle, and drop it on the board — you can flesh it out later.
                         </span>
                     </motion.p>
-                    <motion.div
+                    {/* <motion.div
                         className="mt-10 flex gap-12"
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -72,7 +72,10 @@ const SectionOnePage = () => {
                             <div className="text-5xl font-bold text-foreground">AI</div>
                             <div className="mt-2 text-sm leading-snug text-muted-foreground">Drafts &amp; schedules<br />your posts for you</div>
                         </div>
-                    </motion.div>
+                    </motion.div> */}
+                    <div className="mt-10 flex gap-12">
+                        <Button className="p-6">Get Started Now</Button>
+                    </div>
                 </div>
                
             </div>
@@ -80,4 +83,4 @@ const SectionOnePage = () => {
     );
 }
 
-export default SectionOnePage;
+export default SectionThreePage;

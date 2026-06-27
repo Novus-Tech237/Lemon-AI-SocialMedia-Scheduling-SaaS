@@ -1,5 +1,6 @@
 import { inngest } from "@/inngest/client";
-import { getInsforgeServerClient } from "@/lib/insforge-server";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 
@@ -9,39 +10,31 @@ export async function POST(
 ) {
     try {
         const {id} = await params;
-        const {insforge, userId} = await getInsforgeServerClient();
+        const { userId } = await auth();
         if(!userId) {
             return NextResponse.json({error:"Unauthorized"}, {status:401});
         }
 
-        const {data: post, error: postError} = await insforge.database
-            .from("scheduled_posts")
-            .select("id, status")
-            .eq("id", id)
-            .eq("user_id", userId)
-            .single();
-        
-        if(postError || !post) {
+        const post = await prisma.scheduled_posts.findFirst({
+            where: { id, user_id: userId },
+            select: { id: true, status: true },
+        });
+
+        if(!post) {
             return NextResponse.json({error:"Post not found"}, {status:404});
         }
         if(post.status === "published") {
             return NextResponse.json({error:"Post already published"}, {status:400});
         }
 
-        const {error:updateError} = await insforge.database
-            .from("scheduled_posts")
-            .update({
+        await prisma.scheduled_posts.updateMany({
+            where: { id, user_id: userId },
+            data: {
                 status: "queue",
-                scheduled_at: new Date().toISOString()
-            })
-            .eq("id", id)
-            .eq("user_id", userId)
-            .single();
+                scheduled_at: new Date(),
+            },
+        });
 
-            if(updateError){
-                return NextResponse.json({error:"Failed to update post"}, {status:500});
-            }
-            
             await inngest.send({
                 name: "post/publish.requested",
                 data: {
@@ -49,8 +42,9 @@ export async function POST(
                 }
             });
             return NextResponse.json({success:true});
-        
+
     } catch (error) {
+        console.error("Error publishing post:", error)
         return NextResponse.json({error:"Internal server error"}, {status:500});
     }
 }

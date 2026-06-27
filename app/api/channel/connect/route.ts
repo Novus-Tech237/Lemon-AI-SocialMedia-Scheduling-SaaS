@@ -1,28 +1,28 @@
 import { ChannelTypeEnum } from "@/constants/channels";
-import { getInsforgeServerClient } from "@/lib/insforge-server";
+import { prisma } from "@/lib/prisma";
 import { getOAuthProvider } from "@/lib/social-oauth";
 import { createPkcePair, getPkceCookieName } from "@/lib/social-oauth/pkce";
 import { createOAuthState } from "@/lib/social-oauth/state";
+import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL
 
 export async function POST(request: NextRequest) {
     try {
-    
-        const {insforge, userId} = await getInsforgeServerClient();
+
+        const { userId } = await auth();
         if (!userId) return NextResponse.json({ error: 'User not found' }, { status: 401 });
 
         const {channelTypeId} = await request.json();
         if(!channelTypeId) return NextResponse.json({ error: 'Channel type ID is required' }, { status: 400 });
 
-        const {data:channelType, error} = await insforge.database
-            .from("channel_types")
-            .select("id, type")
-            .eq("id", channelTypeId)
-            .single();
+        const channelType = await prisma.channel_types.findUnique({
+            where: { id: channelTypeId },
+            select: { id: true, type: true },
+        });
 
-            if(error || !channelType) {
+            if(!channelType) {
                 return NextResponse.json({ error: 'Channel type not found' }, { status: 404 });
             }
 
@@ -32,13 +32,13 @@ export async function POST(request: NextRequest) {
             const state = createOAuthState({
                 userId,
                 channelTypeId: channelType.id,
-                channelType: channelType.type,
+                channelType: channelType.type as ChannelTypeEnum,
                 redirectTo,
             })
 
            const callbackUrl = `${APP_URL}/api/channel/callback`
 
-           const pkce = channelType.type === ChannelTypeEnum.TWITTER ? 
+           const pkce = channelType.type === ChannelTypeEnum.TWITTER ?
             createPkcePair()
            : null
 
@@ -60,9 +60,9 @@ export async function POST(request: NextRequest) {
                 maxAge: 60 * 10, // 10 minutes
             })
            }
-            
+
            return response;
-        
+
     } catch (error) {
         console.error('Error connecting channel:', error);
         return NextResponse.json({ error: 'Failed to connect channel' }, { status: 500 });

@@ -1,10 +1,11 @@
-import { getInsforgeServerClient } from "@/lib/insforge-server";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
 
 export async function POST(request: NextRequest) {
     try {
-        const { insforge, userId } = await getInsforgeServerClient();
+        const { userId } = await auth();
         if (!userId) {
             return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
         }
@@ -14,34 +15,26 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "User channel ID is required" }, { status: 400 });
         }
 
-        const { data: userChannelData, error } = await insforge.database
-            .from("user_channels")
-            .select(
-                "id, user_id"
-            )
-            .eq("id", userChannelId)
-            .eq("user_id", userId)
-            .single();
+        const userChannelData = await prisma.user_channels.findFirst({
+            where: { id: userChannelId, user_id: userId },
+            select: { id: true, user_id: true },
+        });
 
-        if (error || !userChannelData) {
+        if (!userChannelData) {
             return NextResponse.json({ error: "User channel not found" }, { status: 404 });
         }
 
-        const { error: updateError } = await insforge.database
-            .from("user_channels")
-            .update({
+        await prisma.user_channels.updateMany({
+            where: { id: userChannelId, user_id: userId },
+            data: {
                 access_token: null,
                 refresh_token: null,
                 token_expires_at: null,
                 is_connected: false,
-                is_active: false
-            })
-            .eq("id", userChannelId)
-            .eq("user_id", userId);
+                is_active: false,
+            },
+        });
 
-        if (updateError) {
-            throw updateError
-        }
         return NextResponse.json({ success: true })
 
     } catch (error) {

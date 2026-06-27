@@ -1,20 +1,14 @@
-import { POST_STATUS, POST_STATUSES } from "@/constants/post";
-import { getInsforgeServerClient } from "@/lib/insforge-server";
+import { POST_STATUS } from "@/constants/post";
+import { prisma } from "@/lib/prisma";
 import { ImageObject } from "@/types/post.type";
 import { auth } from "@clerk/nextjs/server";
+import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
-
-
-type PostType = {
-  channelTypeId: string
-  content: string
-  images?: ImageObject[]
-}
 
 
 export async function GET(request: NextRequest) {
     try {
-        const {insforge, userId} = await getInsforgeServerClient()
+        const { userId } = await auth()
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
@@ -25,34 +19,31 @@ export async function GET(request: NextRequest) {
         .flatMap((channel) => channel.split(",")).filter(Boolean)
         const groupByDate = searchParams.get("group_by_date") === "true";
 
-        let postQuery = insforge.database
-            .from("scheduled_posts")
-            .select(
-                "*, user_channels(*, channel_types(id, type, name, color, character_limit))"
-            )
-            .eq("user_id", userId)
-            .order("scheduled_at", { ascending: false })
+        const where: Prisma.scheduled_postsWhereInput = { user_id: userId }
+        if (status) where.status = status
+        if (channelIds.length > 0) where.user_channel_id = { in: channelIds }
 
-        if (status) postQuery = postQuery.eq("status", status)
-        if (channelIds.length > 0) postQuery = postQuery.in("user_channel_id", channelIds)
-        
-        const {data:posts, error} = await postQuery;
-        if(error) throw error;
-
-        //console.log("posts:", JSON.stringify(posts, null, 2))
-
+        const posts = await prisma.scheduled_posts.findMany({
+            where,
+            include: {
+                user_channels: {
+                    include: { channel_types: true },
+                },
+            },
+            orderBy: { scheduled_at: "desc" },
+        })
 
         if(!groupByDate) return NextResponse.json({ posts: posts ?? []})
 
         // {date: {label:"", posts:[]}}
         const groupMap = new Map<string,{label:string; posts: typeof posts}>();
 
-        (posts ?? []).forEach((post) => {
+        posts.forEach((post) => {
             const date = new Date(post.scheduled_at);
 
             const key = [
                 date.getFullYear(),
-              
+
                 String(date.getMonth() + 1).padStart(2, "0"),
                 String(date.getDate()).padStart(2, "0")
             ].join("-");
@@ -63,15 +54,13 @@ export async function GET(request: NextRequest) {
            groupMap.get(key)!.posts.push(post);
         });
 
-        console.log("groupMap size:", groupMap.size)
-
         const groupPosts = Array.from(groupMap.entries()).map(([key, value]) => ({
             key,
             ...value
         }));
-        
+
         return NextResponse.json({ groupPosts })
-        
+
     } catch (error) {
         console.error("Error getting posts:", error)
         return NextResponse.json({ error: "Internal server error" }, { status: 500 })
@@ -86,7 +75,6 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        const {insforge} = await getInsforgeServerClient()
         const {
             posts,
             scheduledAt,
@@ -112,35 +100,33 @@ export async function POST(request: NextRequest) {
 
         const isPaidPlan = has({ plan:"pro"}) || has({ plan:"premium"})
         if(!isPaidPlan){
-            const canCreatePost = await checkCreatePostLimit(insforge, userId)
+            const canCreatePost = await checkCreatePostLimit(userId)
             if (!canCreatePost) {
                 return NextResponse.json({ error: "You have reached your post limit, upgrade" }, { status: 403 })
             }
         }
-        
+
         const invalidPost = normalizedPosts.find((post) => !post.content);
         if (invalidPost) {
             return NextResponse.json({ error: "Post content is required" }, { status: 400 })
         }
 
         const channelTypeIds = [...new Set(normalizedPosts.map((post) => post.channelTypeId))];
-        
-        const {data: userChannels, error: userChannelsError} = await insforge.database
-            .from("user_channels")
-            .select("id, channel_type_id")
-            .eq("user_id", userId)
-            .eq("is_active", true)
-            .eq("is_connected", true)
-            .in("channel_type_id", channelTypeIds)
 
-            if(userChannelsError) {
-                return NextResponse.json({ error: "Failed to fetch user channels" }, { status: 500 })
-            }
+        const userChannels = await prisma.user_channels.findMany({
+            where: {
+                user_id: userId,
+                is_active: true,
+                is_connected: true,
+                channel_type_id: { in: channelTypeIds },
+            },
+            select: { id: true, channel_type_id: true },
+        })
 
             if(!userChannels || userChannels.length === 0) {
                 return NextResponse.json({ error: "No active channels found" }, { status: 404 })
             }
-            
+
             const connectedChannels = new Map(
                 userChannels.map((user_channel) => [
                     user_channel.channel_type_id,
@@ -162,26 +148,20 @@ export async function POST(request: NextRequest) {
 
             const postStatus = status === POST_STATUS.DRAFT ? POST_STATUS.DRAFT : POST_STATUS.QUEUE;
 
+            const scheduledDate = new Date(scheduledAt)
+
             const payload = normalizedPosts.map((post) => ({
                 user_id: userId,
-                user_channel_id: connectedChannels.get(post.channelTypeId),
+                user_channel_id: connectedChannels.get(post.channelTypeId)!,
                 content: post.content,
-                images: post.images,
-                scheduled_at: scheduledAt,
+                images: (post.images ?? []) as ImageObject[] as unknown as Prisma.InputJsonValue,
+                scheduled_at: scheduledDate,
                 status: postStatus
             }))
 
-            // console.log(payload,"payload")
-
-            const {data, error} = await insforge.database
-            .from("scheduled_posts")
-            .insert(payload)
-            .select()
-
-            if(error) {
-                console.log(error,"error")
-                return NextResponse.json({ error: "Failed to create posts" }, { status: 500 })
-            }
+            const data = await prisma.$transaction(
+                payload.map((post) => prisma.scheduled_posts.create({ data: post }))
+            )
 
             return NextResponse.json({ posts: data }, { status: 201 })
 
@@ -191,20 +171,12 @@ export async function POST(request: NextRequest) {
     }
 }
 
-async function checkCreatePostLimit(
-  insforge: Awaited<ReturnType<typeof getInsforgeServerClient>>["insforge"],
-  userId: string,
-) {
-  const { count, error } = await insforge.database
-    .from("scheduled_posts")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId);
+async function checkCreatePostLimit(userId: string) {
+  const count = await prisma.scheduled_posts.count({
+    where: { user_id: userId },
+  });
 
-  if (error) {
-    throw error;
-  }
-
-  return (count ?? 0) < 4;
+  return count < 4;
 }
 
 
@@ -212,7 +184,7 @@ function formatDayLabel(date:Date){
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    
+
     if(date.toDateString() === today.toDateString()) {
         return "Today";
     }

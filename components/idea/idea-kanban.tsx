@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { MoreHorizontal, Plus } from "lucide-react"
 import {
@@ -43,11 +43,16 @@ const IdeaKanban = () => {
         },
     })
 
-    useEffect(() => {
-        if (ideaData?.groups) {
-            setColumns(ideaData.groups)
-        }
-    }, [ideaData])
+    // Seed the editable board from the query, and re-sync whenever the query
+    // produces new data (e.g. after a mutation invalidates the cache). React Query
+    // keeps `groups` referentially stable until the data actually changes, so this
+    // comparison only re-syncs on real changes. Adjusting state during render —
+    // rather than in an effect — avoids the cascading-render warning.
+    const [syncedGroups, setSyncedGroups] = useState<Column[] | undefined>(undefined)
+    if (ideaData?.groups && ideaData.groups !== syncedGroups) {
+        setSyncedGroups(ideaData.groups)
+        setColumns(ideaData.groups)
+    }
 
     const saveIdeaMutation = useMutation({
         mutationFn: async (idea: IdeaType) => {
@@ -242,7 +247,7 @@ const IdeaKanban = () => {
     return (
         <>
             <div className="flex flex-col overflow-hidden">
-                <header className="flex flex-col gap-3 border-b px-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                <header className="flex flex-col gap-3 border-b px-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-4">
                     <div>
                         <h1 className="text-xl font-semibold">Ideas</h1>
                         <p className="text-sm text-muted-foreground">
@@ -262,12 +267,12 @@ const IdeaKanban = () => {
                 </header>
 
 
-                <div className="h-[calc(100vh-180px)] md:h-[calc(100vh-120px)]">
-                    <div className="kanban--board relative py-4 sm:py-6 flex-1 h-full overflow-hidden px-3 sm:px-0">
+                <div className="h-[calc(100dvh-216px)] md:h-[calc(100dvh-120px)]">
+                    <div className="kanban--board relative py-4 sm:py-6 flex-1 h-full overflow-hidden sm:px-0">
                         {isPending ? (
                             <div className="flex gap-4 w-full h-full items-start">
                                 {[1, 2, 3, 4].map((i) => (
-                                    <div key={i} className="shrink-0 w-[280px] flex flex-col h-full min-h-0 
+                                    <div key={i} className="shrink-0 w-full sm:w-70 flex flex-col h-full min-h-0
                 rounded-lg bg-[#f7f6f3] dark:bg-neutral-800/40 border p-3">
                                         <div className="flex items-center justify-between pb-3">
                                             <Skeleton className="h-5 w-24" />
@@ -282,7 +287,7 @@ const IdeaKanban = () => {
                                 ))}
                             </div>
                         ) : (
-                            <div className="h-full overflow-x-auto">
+                            <div className="h-full overflow-x-auto snap-x snap-mandatory sm:snap-none">
                                 <DragDropContext onDragEnd={handleDragEnd}>
                                     <div
                                         style={{ height: "100%" }}
@@ -291,8 +296,7 @@ const IdeaKanban = () => {
                                         {columns?.map((column) => (
                                             <div
                                                 key={column.id}
-                                                className="shrink-0 w-[280px] flex flex-col h-full min-h-0 
-rounded-lg bg-[#f7f6f3] dark:bg-neutral-800/40 border p-3"
+                                                className="shrink-0 snap-start w-full sm:w-70 flex flex-col h-full min-h-0 rounded-lg bg-[#f7f6f3] dark:bg-neutral-800/40 border p-3"
                                             >
                                                 <div className="flex items-center justify-between px-3 pt-3 pb-2">
                                                     <div className="flex items-center gap-2">
@@ -369,11 +373,12 @@ p-2 px-3 transition-colors min-h-0`,
                                                                     <h4 className="font-semibold text-sm">{idea.title}</h4>
                                                                 </div>
                                                                 <DropdownMenu>
-                                                                    <DropdownMenuTrigger>
+                                                                    <DropdownMenuTrigger asChild>
                                                                         <Button
                                                                             size="icon"
                                                                             variant="ghost"
-                                                                            className="h-6 w-6 opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                            className="size-8 md:size-6 opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                                            onClick={(e) => e.stopPropagation()}
                                                                         >
                                                                             <MoreHorizontal className="h-3.5 w-3.5" />
                                                                         </Button>

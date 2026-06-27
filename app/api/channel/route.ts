@@ -1,37 +1,34 @@
-import { getInsforgeServerClient } from "@/lib/insforge-server";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
 
     try {
-        const {insforge, userId} = await getInsforgeServerClient()
+        const { userId } = await auth()
         if(!userId) return new NextResponse('Unauthorized', { status: 401 })
 
         const filter = request.nextUrl.searchParams.get('filter')
 
-        const [typesRes, userChannelsRes] = await Promise.all([
-            insforge.database.from("channel_types")
-            .select("*")
-            .order("created_at", { ascending: true }),
-            insforge.database.from("user_channels")
-            .select("*")
-            .eq("user_id", userId)
+        const [types, userChannels] = await Promise.all([
+            prisma.channel_types.findMany({
+                orderBy: { created_at: "asc" },
+            }),
+            prisma.user_channels.findMany({
+                where: { user_id: userId },
+            }),
         ]);
 
-        if (typesRes.error || userChannelsRes.error) {
-            return new NextResponse('Internal Server Error', { status: 500 })
-        }
-
         const userChannelMap = new Map(
-            userChannelsRes.data.map(channel => 
+            userChannels.map(channel =>
                 [
-                    channel.channel_type_id, 
+                    channel.channel_type_id,
                     channel
                 ]
             )
         )
 
-        let channels = (typesRes.data || []).map(channel_type => {
+        let channels = types.map(channel_type => {
             const userChannel = userChannelMap.get(channel_type.id)
             return {
               id: channel_type.id,
@@ -47,7 +44,7 @@ export async function GET(request: NextRequest) {
             }
         })
 
-        const totalChannels = typesRes.data?.length || 0;
+        const totalChannels = types.length;
         const connectedCount = channels.filter(channel => channel.connected).length;
 
         if(filter === 'connected') {
@@ -61,7 +58,7 @@ export async function GET(request: NextRequest) {
             totalChannels,
             connectedCount
         })
-        
+
     } catch (error) {
         console.error('Error fetching channels:', error)
         return new NextResponse('Internal Server Error', { status: 500 })

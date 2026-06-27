@@ -10,9 +10,9 @@ const featurePanels = [
     tone: "bg-[#ead6ff] dark:bg-card",
   },
   {
-    title: "Customize once, publish everywhere",
+    title: "Post on time, Every time",
     description:
-      "Start with a global draft, fine-tune each channel, and keep every post matched to the platform.",
+      "Set it and forget it. Automated cron jobs make sure your content goes out exactly when you planned.",
     tone: "bg-[#d7f2b7] dark:bg-card",
   },
 ];
@@ -34,14 +34,14 @@ export function Features() {
       initial="hidden"
       whileInView="show"
       viewport={{ once: true, amount: 0.3 }}
-      className="mx-auto grid max-w-7xl gap-5 px-6 pb-16 md:grid-cols-2"
+      id="features"
+      className="mx-auto grid max-w-7xl gap-5 px-6 pb-16 md:grid-cols-2 scroll-mt-24"
     >
       {featurePanels.map((feature) => (
         <motion.div
           key={feature.title}
           variants={panel}
-          whileHover={{ y: -6 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          whileHover={{ y: -6, transition: { duration: 0.2, ease: "easeOut" } }}
           className={`${feature.tone} rounded-[28px] border border-border/60 p-8`}
         >
           <div className="max-w-md">

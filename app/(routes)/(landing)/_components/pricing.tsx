@@ -75,7 +75,7 @@ const card: Variants = {
 
 export function Pricing() {
   return (
-    <section className="mx-auto max-w-7xl px-6 pb-16">
+    <section id="pricing" className="mx-auto max-w-7xl px-6 pb-16 scroll-mt-24">
       <div className="mx-auto max-w-2xl text-center">
         <h2 className="text-4xl font-bold tracking-tight text-foreground">
           Simple, transparent pricing
@@ -96,8 +96,7 @@ export function Pricing() {
           <motion.div
             key={plan.name}
             variants={card}
-            whileHover={{ y: -6 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            whileHover={{ y: -6, transition: { duration: 0.2, ease: "easeOut" } }}
             className={`flex flex-col rounded-[28px] border p-8 ${
               plan.highlighted
                 ? "border-primary bg-card shadow-[0_20px_40px_rgba(15,23,42,0.10)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.30)]"
@@ -141,7 +140,7 @@ export function Pricing() {
       </motion.div>
 
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        Payment methods will be implemented later.
+        Non-Recurring • Cancel anytime • VAT included • Charged per Month
       </p>
     </section>
   );

@@ -74,9 +74,9 @@ const SectionTwoPage = () => {
                     <Image
                         src={"/images/group.png"}
                         alt="Solux E-Learning, Achidi Malik-Al Faycal"
-                        height={400}
-                        width={400}
-                        className="mx-auto mt-16 lg:mt-0 md:w-[500px] relative z-10 rounded-[55%_45%_40%_60%/45%_55%_45%_55%]"
+                        height={600}
+                        width={600}
+                        className="mx-auto mt-16 lg:mt-0 md:w-[600px] relative z-10 rounded-[55%_45%_40%_60%/45%_55%_45%_55%]"
                     />
                 </motion.div>
                

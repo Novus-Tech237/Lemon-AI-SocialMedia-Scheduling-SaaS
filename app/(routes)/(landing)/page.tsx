@@ -6,6 +6,7 @@ import { Pricing } from "./_components/pricing";
 import { Footer } from "./_components/footer";
 import SectionOnePage from "./_components/sections/one";
 import SectionTwoPage from "./_components/sections/two";
+import SectionThreePage from "./_components/sections/three";
 
 export default function LandingPage() {
   return (
@@ -16,6 +17,7 @@ export default function LandingPage() {
         <SectionOnePage />
         <SectionTwoPage />
         <Features />
+        <SectionThreePage/>
         <Pricing />
       </main>
       <Footer />

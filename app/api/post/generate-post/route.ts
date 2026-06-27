@@ -1,4 +1,5 @@
-import { getInsforgeServerClient } from "@/lib/insforge-server";
+import { AI_MODEL, anthropic } from "@/lib/anthropic";
+import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -17,7 +18,7 @@ export async function POST(request:NextRequest){
         if (!canUseAI) {
             return NextResponse.json({ error: "AI Post generation requires Pro or Premium plan" }, { status: 403 });
         }
-        
+
         const {
             action,
             content="",
@@ -35,18 +36,12 @@ export async function POST(request:NextRequest){
         let channelType:string | undefined;
         let characterLimit:number | undefined;
 
-        const {insforge} = await getInsforgeServerClient();
-
         if(channelId){
-            const {data: channelData, error: channelError} = await insforge.database
-                .from("channel_types")
-                .select("type, character_limit")
-                .eq("id", channelId)
-                .single();
-            
-            if(channelError){
-                return NextResponse.json({ error: "Invalid channel ID" }, { status: 400 });
-            }
+            const channelData = await prisma.channel_types.findUnique({
+                where: { id: channelId },
+                select: { type: true, character_limit: true },
+            });
+
             if(!channelData){
                 return NextResponse.json({ error: "Channel not found" }, { status: 404 });
             }
@@ -54,22 +49,26 @@ export async function POST(request:NextRequest){
             characterLimit = channelData.character_limit;
         }
 
-        const result = await insforge.ai.chat.completions.create({
-          model: "google/gemini-2.5-flash-lite",
+        const result = await anthropic.messages.create({
+            model: AI_MODEL,
+            max_tokens: 1024,
+            system: buildSystemPrompt(channelType, characterLimit),
             messages: [
                 {
-                    role: "system",
-                    content: buildSystemPrompt(channelType, characterLimit)
-                },{
                     role: "user",
                     content: buildPrompt(action, content, prompt),
-                }
-            ]
+                },
+            ],
         });
 
-        const text = result.choices[0]?.message?.content ?? "";
+        const text = result.content
+            .filter((block) => block.type === "text")
+            .map((block) => block.text)
+            .join("")
+            .trim();
         return NextResponse.json({ content: text})
     } catch (error) {
+        console.error("Error generating post:", error)
         return NextResponse.json({ error: "Failed to generate post"},{ status:500})
     }
 }

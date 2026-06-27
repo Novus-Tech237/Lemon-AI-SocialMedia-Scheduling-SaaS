@@ -1,4 +1,4 @@
-import { getInsforgeAdminClient } from "@/lib/insforge-server";
+import { prisma } from "@/lib/prisma";
 import { inngest } from "../client";
 import { ImageObject, PostType } from "@/types/post.type";
 import { decrypt, encrypt } from "@/lib/encryption";
@@ -25,22 +25,19 @@ export const publishScheduledPostsCron = inngest.createFunction(
     async ({step,logger}) => {
 
         const duePosts = await step.run("load-due-scheduled-posts", async () => {
-            const insforge = getInsforgeAdminClient()
-            const now = new Date().toISOString()
-            const { data, error } = await insforge.database
-                .from("scheduled_posts")
-                .select("id, status, scheduled_at")
-                .eq("status", "queue")
-                .lte("scheduled_at", now)
-                .order("scheduled_at", { ascending: true })
+            const now = new Date()
+            const data = await prisma.scheduled_posts.findMany({
+                where: {
+                    status: "queue",
+                    scheduled_at: { lte: now },
+                },
+                select: { id: true, status: true, scheduled_at: true },
+                orderBy: { scheduled_at: "asc" },
+            })
 
-            logger.info("Load due scheduled posts", { count: data?.length })
+            logger.info("Load due scheduled posts", { count: data.length })
 
-            if(error){
-                logger.error(error)
-                throw error
-            }
-            return (data ?? []) as DuePost[]
+            return data as DuePost[]
         })
 
         if(duePosts.length === 0){
@@ -72,21 +69,18 @@ export const publishScheduledPost = inngest.createFunction(
     },
     async ({event, step,logger}) => {
        const post = await step.run("load-post", async () => {
-        const insforge = getInsforgeAdminClient()
-        const { data, error } = await insforge.database
-            .from("scheduled_posts")
-            .select("*, user_channels(*, channel_types(id, type, name))")
-            .eq("id", event.data.postId)
-            .eq("status", "queue")
-            .single()
+        const data = await prisma.scheduled_posts.findFirst({
+            where: { id: event.data.postId, status: "queue" },
+            include: {
+                user_channels: {
+                    include: { channel_types: true },
+                },
+            },
+        })
 
         logger.info("Load post", { data })
-        if(error){
-            logger.error(error)
-            throw error
-        }
-        
-        return data as PostType;
+
+        return data as unknown as PostType | null;
        })
 
        if(!post){
@@ -436,43 +430,35 @@ async function saveRefreshedToken(
     if(!userChannelId) {
         throw new Error("User channel ID is missing")
     };
-    const insforge = getInsforgeAdminClient();
-    const {error} = await insforge.database
-        .from("user_channels")
-        .update({
+    await prisma.user_channels.update({
+        where: { id: userChannelId },
+        data: {
             access_token: encrypt(accessToken),
             refresh_token: encrypt(refreshToken),
-            token_expires_at: expiresAt ?? null
-        })
-        .eq("id", userChannelId);
-    
-    if(error) throw error
+            token_expires_at: expiresAt ? new Date(expiresAt) : null,
+        },
+    });
 }
 
 async function markPostPublished(postId:string, published_url:string | null){
-    const insforge = getInsforgeAdminClient();
-    const {error} = await insforge.database
-        .from("scheduled_posts")
-        .update({
+    await prisma.scheduled_posts.update({
+        where: { id: postId },
+        data: {
             status: "published",
-            published_at: new Date().toISOString(),
-            published_url: published_url
-        })
-        .eq("id", postId);
-    if(error) throw error
+            published_at: new Date(),
+            published_url: published_url,
+        },
+    });
 }
 
 async function markPostFailed(postId:string, errorMessage:string){
-    const insforge = getInsforgeAdminClient();
-    const {error} = await insforge.database
-        .from("scheduled_posts")
-        .update({
+    await prisma.scheduled_posts.update({
+        where: { id: postId },
+        data: {
             status: "failed",
-            error_message: errorMessage
-        })
-        .eq("id", postId);
-    
-    if(error) throw error
+            error_message: errorMessage,
+        },
+    });
 }
 
 function formatLinkedInText(text: string): string {

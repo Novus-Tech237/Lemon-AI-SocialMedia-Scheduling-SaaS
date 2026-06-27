@@ -1,6 +1,7 @@
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import AppSidebar from "./_common/app-sidebar";
 import MobileNav from "./_common/mobile-nav";
+import MobileHeader from "./_common/mobile-header";
 
 export default function DashboardLayout({
   children,
@@ -13,6 +14,7 @@ export default function DashboardLayout({
             <SidebarInset
             className="bg-sidebar! border-none"
             >
+            <MobileHeader />
             <div className="m-1 px-4 rounded-lg border border-border
              dark:border-[#e0e1e11a] shadow-xs bg-background h-full
             ">

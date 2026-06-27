@@ -3,13 +3,26 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth, UserButton } from "@clerk/nextjs";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { motion } from "motion/react";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/dark-mode-toggle";
 
-const navItems = ["Features", "About", "Pricing"];
+const navItems = [
+  { label: "Features", href: "#features" },
+  { label: "About", href: "#about" },
+  { label: "Pricing", href: "#pricing" },
+];
+
+const NAVBAR_OFFSET = 96;
+
+function scrollToSection(href: string) {
+  const target = document.querySelector(href);
+  if (!target) return;
+  const top = target.getBoundingClientRect().top + window.scrollY - NAVBAR_OFFSET;
+  window.scrollTo({ top, behavior: "smooth" });
+}
 
 export function Navbar() {
   const { isSignedIn } = useAuth();
@@ -33,7 +46,7 @@ export function Navbar() {
       className="sticky top-4 z-50 px-4"
     >
       <div
-        className={`mx-auto max-w-6xl rounded-2xl border px-5 py-3 backdrop-blur-md transition-all duration-300 ${
+        className={`mx-auto max-w-6xl rounded-2xl border px-5 py-3 backdrop-blur-md transition-[background-color,border-color,box-shadow] duration-300 ${
           isScrolled
             ? "border-border/80 bg-background/95 shadow-xl"
             : "border-border/60 bg-background/80 shadow-lg"
@@ -46,12 +59,14 @@ export function Navbar() {
           {/* Desktop nav */}
           <nav className="hidden items-center gap-8 md:flex">
             {navItems.map((item) => (
-              <button
-                key={item}
-                className="flex items-center gap-1 text-sm text-black dark:text-white transition-colors hover:text-foreground"
+              <a
+                key={item.label}
+                href={item.href}
+                onClick={(e) => { e.preventDefault(); scrollToSection(item.href); }}
+                className="text-sm text-black dark:text-white transition-colors hover:text-foreground"
               >
-                <span>{item}</span>
-              </button>
+                {item.label}
+              </a>
             ))}
           </nav>
 
@@ -82,12 +97,12 @@ export function Navbar() {
               className="relative flex size-9 items-center justify-center rounded-lg border border-border/60 text-foreground transition-colors hover:bg-muted"
             >
               <Menu
-                className={`absolute size-5 transition-all duration-300 ${
+                className={`absolute size-5 transition-[opacity,transform] duration-300 ${
                   isMenuOpen ? "rotate-90 scale-75 opacity-0" : "rotate-0 scale-100 opacity-100"
                 }`}
               />
               <X
-                className={`absolute size-5 transition-all duration-300 ${
+                className={`absolute size-5 transition-[opacity,transform] duration-300 ${
                   isMenuOpen ? "rotate-0 scale-100 opacity-100" : "-rotate-90 scale-75 opacity-0"
                 }`}
               />
@@ -97,25 +112,25 @@ export function Navbar() {
 
         {/* Mobile collapsible menu */}
         <div
-          className={`flex flex-col overflow-hidden transition-all duration-300 ease-in-out md:hidden ${
+          className={`flex flex-col overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out md:hidden ${
             isMenuOpen ? "max-h-120 opacity-100" : "max-h-0 opacity-0"
           }`}
         >
           <nav className="mt-4 flex flex-col">
             {navItems.map((item, idx) => (
-              <button
-                key={item}
-                onClick={closeMenu}
+              <a
+                key={item.label}
+                href={item.href}
+                onClick={(e) => { e.preventDefault(); scrollToSection(item.href); closeMenu(); }}
                 style={{
                   animation: isMenuOpen
                     ? `slideIn 0.3s ease-out ${0.06 * (idx + 1)}s both`
                     : "none",
                 }}
-                className="flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
-                <span>{item}</span>
-                {item !== "Pricing" && <ChevronDown className="h-4 w-4" />}
-              </button>
+                {item.label}
+              </a>
             ))}
           </nav>
 

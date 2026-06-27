@@ -1,8 +1,6 @@
-import { getInsforgeServerClient } from "@/lib/insforge-server";
+import { AI_MODEL, anthropic } from "@/lib/anthropic";
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
-
-
 
 
 export async function POST(request: NextRequest) {
@@ -22,13 +20,10 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Missing businessType or targetAudience" }, { status: 400 });
         }
 
-        const { insforge } = await getInsforgeServerClient()
-        const result = await insforge.ai.chat.completions.create({
-            model: "google/gemini-2.5-flash-lite",
-            messages: [
-                {
-                    role: "system",
-                    content: `You are a social media content ideation assistant. 
+        const result = await anthropic.messages.create({
+            model: AI_MODEL,
+            max_tokens: 1024,
+            system: `You are a social media content ideation assistant.
 Return only valid JSON.
 The response must be an object with an "ideas" array.
 Each item must have: "title" and "description".
@@ -37,7 +32,7 @@ Keep titles catchy.
 Keep descriptions practical and specific.
 Do not use markdown formatting like **, *, #, or backticks.
 Return plain text only inside the JSON strings.`,
-                },
+            messages: [
                 {
                     role: "user",
                     content: `Business type: ${businessType}. Target audience: ${targetAudience}.`
@@ -45,9 +40,12 @@ Return plain text only inside the JSON strings.`,
             ]
         })
 
-        const text = result.choices[0]?.message?.content ?? ""
+        const text = result.content
+            .filter((block) => block.type === "text")
+            .map((block) => block.text)
+            .join("")
 
-        const parsed = JSON.parse(text) as { ideas?: { title: string, description: string }[] }
+        const parsed = JSON.parse(stripJsonFences(text)) as { ideas?: { title: string, description: string }[] }
         const ideas = Array.isArray(parsed.ideas) ? parsed.ideas.slice(0, 3) : []
 
         return NextResponse.json({ ideas })
@@ -56,4 +54,9 @@ Return plain text only inside the JSON strings.`,
         console.error("Error generating ideas:", error)
         return NextResponse.json({ error: "Failed to generate ideas" }, { status: 500 })
     }
+}
+
+// Defensively strip ```json ... ``` fences in case the model wraps its output.
+function stripJsonFences(text: string) {
+    return text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim()
 }

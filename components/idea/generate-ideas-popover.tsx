@@ -91,13 +91,13 @@ export function GenerateIdeasPopover({ onGenerated }: GenerateIdeasPopoverProps)
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="gap-2 
+        <Button variant="outline" className="flex-1 gap-2 sm:flex-none
         bg-linear-to-r from-[#b0ec9c33] to-[#d1bdff33]">
           <Sparkles className="h-4 w-4" />
           Generate Ideas
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-4 shadow-lg" align="end">
+      <PopoverContent className="w-[calc(100vw-2rem)] max-w-100 p-4 shadow-lg" align="end" collisionPadding={12}>
       {!canUseAI && !isLoading && (
          <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3
            text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200">
