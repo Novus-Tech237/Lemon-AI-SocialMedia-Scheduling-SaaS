@@ -7,7 +7,8 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { motion, type Variants } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { ChannelTypeEnum, getChannelIcon } from "@/constants/channels";
-import  Threads  from "./threads";
+import Threads from "./threads";
+import Lightfall from "../lightfall";
 
 const platformBadges = [
   { type: ChannelTypeEnum.TWITTER,   color: "#000000", className: "left-[2%]  top-[8%]"  },
@@ -36,13 +37,14 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden">
-      {/* Plasma canvas as background — no negative z-index, DOM order keeps it below overlays */}
-      <div className="absolute inset-0">
-        <Threads
-    amplitude={1}
-    distance={0}
-    enableMouseInteraction
-  />
+      {/* Mobile background: Lightfall */}
+      <div className="absolute inset-0 md:hidden">
+        <Lightfall mouseInteraction={false} speed={0.4} streakCount={3} opacity={0.85} />
+      </div>
+
+      {/* Desktop background: Threads */}
+      <div className="absolute inset-0 hidden md:block">
+        <Threads amplitude={1} distance={0} enableMouseInteraction />
       </div>
 
       {/* Subtle grid overlay */}
