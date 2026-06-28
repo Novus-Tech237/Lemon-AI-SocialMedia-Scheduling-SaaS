@@ -43,7 +43,7 @@ export function Navbar() {
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="sticky top-4 z-50 px-4"
+      className="fixed inset-x-0 top-4 z-50 px-4"
     >
       <div
         className={`mx-auto max-w-6xl rounded-2xl border px-5 py-3 backdrop-blur-md transition-[background-color,border-color,box-shadow] duration-300 ${

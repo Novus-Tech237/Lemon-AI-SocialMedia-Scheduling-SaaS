@@ -8,7 +8,7 @@ import { Calendar, CreditCard, Lightbulb, Plus, PlusCircleIcon, Settings } from 
 import { useSidebar } from '@/components/ui/sidebar';
 import Logo from '@/components/logo';
 import { Button } from '@/components/ui/button';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getChannelIcon, getChannelUrl } from '@/constants/channels';
 import { ChannelType } from '@/types/channel.type';
@@ -31,7 +31,42 @@ const AppSidebar = () => {
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
   const { user } = useUser()
+  const queryClient = useQueryClient()
   const [isCreatePostOpen, setIsCreatePostOpen] = useState<boolean>(false)
+
+  // Warm the destination page's data on hover/focus so the first visit feels
+  // instant. prefetchQuery respects the global staleTime, so repeated hovers
+  // within the fresh window are no-ops. Keys/fns mirror each page's queries.
+  const prefetchRoute = (href: string) => {
+    if (href === "/ideas") {
+      queryClient.prefetchQuery({
+        queryKey: ["ideas"],
+        queryFn: async () => {
+          const res = await fetch("/api/idea")
+          if (!res.ok) throw new Error("Failed to fetch ideas")
+          return res.json()
+        },
+      })
+    } else if (href === "/schedule") {
+      // Matches the schedule page's default nuqs state (status "draft", no channel filter).
+      queryClient.prefetchQuery({
+        queryKey: ["posts", "draft", []],
+        queryFn: async () => {
+          const res = await fetch("/api/post?group_by_date=true&status=draft")
+          if (!res.ok) throw new Error("Failed to fetch posts")
+          return res.json()
+        },
+      })
+      queryClient.prefetchQuery({
+        queryKey: ["posts", "totals", []],
+        queryFn: async () => {
+          const res = await fetch("/api/post/totals")
+          if (!res.ok) throw new Error("Failed to fetch totals")
+          return res.json()
+        },
+      })
+    }
+  }
 
    const connectMutation = useMutation({
     mutationFn: async (channelTypeId: string) => {
@@ -105,7 +140,11 @@ const AppSidebar = () => {
                             isActive={pathname === item.href}
                     tooltip={item.name}
                             >
-                                <Link href={item.href}>
+                                <Link
+                                    href={item.href}
+                                    onMouseEnter={() => prefetchRoute(item.href)}
+                                    onFocus={() => prefetchRoute(item.href)}
+                                >
                                     <item.icon className="size-4" />
                                     <span className='text-sm'>{item.name}</span>
                                 </Link>

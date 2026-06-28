@@ -8,7 +8,8 @@ import { motion, type Variants } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { ChannelTypeEnum, getChannelIcon } from "@/constants/channels";
 import Threads from "./threads";
-import Lightfall from "../lightfall";
+import Prism from "./prism";
+import { Navbar } from "./navbar";
 
 const platformBadges = [
   { type: ChannelTypeEnum.TWITTER,   color: "#000000", className: "left-[2%]  top-[8%]"  },
@@ -18,6 +19,17 @@ const platformBadges = [
   { type: ChannelTypeEnum.INSTAGRAM, color: "#E4405F", className: "right-[6%] top-[32%]" },
   { type: ChannelTypeEnum.THREADS,   color: "#000000", className: "right-[2%] top-[56%]" },
   { type: ChannelTypeEnum.FACEBOOK,  color: "#1877F2", className: "right-[9%] top-[56%]" },
+];
+
+// Mobile keeps the badges in the corners/edges so they decorate the background
+// without colliding with the vertically-centred hero text on a narrow viewport.
+const mobilePlatformBadges = [
+  { type: ChannelTypeEnum.TWITTER,   color: "#000000", className: "left-[6%]  top-[13%]"    },
+  { type: ChannelTypeEnum.BLUESKY,   color: "#1285fe", className: "right-[6%] top-[13%]"    },
+  { type: ChannelTypeEnum.LINKEDIN,  color: "#2867b2", className: "left-[2%]  top-[23%]"    },
+  { type: ChannelTypeEnum.INSTAGRAM, color: "#E4405F", className: "right-[3%] top-[22%]"    },
+  { type: ChannelTypeEnum.YOUTUBE,   color: "#FF0000", className: "left-[6%]  bottom-[7%]"  },
+  { type: ChannelTypeEnum.FACEBOOK,  color: "#1877F2", className: "right-[6%] bottom-[7%]"  },
 ];
 
 const container: Variants = {
@@ -37,9 +49,21 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden">
+      <Navbar />
       {/* Mobile background: Lightfall */}
-      <div className="absolute inset-0 md:hidden">
-        <Lightfall mouseInteraction={false} speed={0.4} streakCount={3} opacity={0.85} />
+      <div className="absolute inset-0 md:hidden bg-transparent">
+         <Prism
+    animationType="rotate"
+    timeScale={0.5}
+    height={7.2}
+    baseWidth={5.5}
+    scale={3.6}
+    hueShift={0}
+    colorFrequency={1}
+    noise={0}
+    glow={1}
+  />
+
       </div>
 
       {/* Desktop background: Threads */}
@@ -50,9 +74,35 @@ export function Hero() {
       {/* Subtle grid overlay */}
       <div className="pointer-events-none absolute inset-0 opacity-40 dark:opacity-20 [background-image:linear-gradient(to_right,rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.06)_1px,transparent_1px)] dark:[background-image:linear-gradient(to_right,rgba(248,250,252,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(248,250,252,0.08)_1px,transparent_1px)] [background-size:56px_56px]" />
 
-      {/* Edge fades so plasma blends into background */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-background to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-background to-transparent" />
+      {/* Edge fades so plasma blends into background (skipped on mobile light mode) */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-background to-transparent hidden md:block dark:block" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-background to-transparent md:h-36" />
+
+      {/* Floating platform badges (mobile) — faint corner decoration behind the text */}
+      <div className="pointer-events-none absolute inset-0 md:hidden">
+        {mobilePlatformBadges.map((platform, index) => {
+          const icon = getChannelIcon(platform.type);
+          return (
+            <motion.div
+              key={platform.type}
+              initial={{ opacity: 0, scale: 0.6 }}
+              whileInView={{ opacity: 0.55, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 + index * 0.1, ease: "easeOut" }}
+              className={`absolute ${platform.className} rounded-xl border border-border/60 bg-card/80 p-2.5 shadow-[0_8px_24px_rgba(15,23,42,0.06)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.24)]`}
+            >
+              {icon && (
+                <div
+                  className="flex size-7 items-center justify-center rounded-lg text-white"
+                  style={{ backgroundColor: platform.color }}
+                >
+                  <HugeiconsIcon icon={icon} color="currentColor" className="size-4" />
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
+      </div>
 
       <div className="relative z-10 mx-auto flex min-h-[720px] max-w-7xl flex-col px-6 pb-16 pt-16">
         {/* Floating platform badges */}

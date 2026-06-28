@@ -153,20 +153,33 @@ iframe[src*="__clerk_db_jwt"],
   }
 }
 
+/* Hide scrollbars project-wide while keeping content scrollable.
+   Declared OUTSIDE @layer so it wins over Tailwind's layered base styles —
+   unlayered CSS always beats layered CSS regardless of specificity. The
+   viewport scrollbar attaches to html/body, so target those explicitly too. */
+html,
+body,
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* legacy Edge/IE */
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none; /* Chrome, Safari, other WebKit/Blink */
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
   }
   html {
     @apply font-sans;
     scroll-behavior: smooth;
-  }
-  body::-webkit-scrollbar {
-    display: none;
   }
 }
